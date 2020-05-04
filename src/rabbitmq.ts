@@ -2,7 +2,7 @@ import { fail, Result } from './result';
 import { RECEIPT_NOT_REQUESTED } from './client/receipt';
 import { FrameHeaders } from './frame/header';
 import { Frame } from './frame/protocol';
-import { ClientSession } from './client/session';
+import { ClientSession, MessageResult } from './client/session';
 import { discardMessages } from './client/message';
 
 /**
@@ -13,7 +13,7 @@ import { discardMessages } from './client/message';
  * @param session The ClientSession object
  * @return The reply frame
  */
-export async function request(message: Frame, replyTimeout: number, session: ClientSession): Promise<Result<Frame>> {
+export async function request(message: Frame, replyTimeout: number, session: ClientSession): Promise<MessageResult> {
 
   const replyTo = `/temp-queue/request-${session.generateResourceId()}`;
 
@@ -22,7 +22,7 @@ export async function request(message: Frame, replyTimeout: number, session: Cli
   const replyMessage = session.receive(subscription);
 
   const timeout = replyTimeout > 0 ? setTimeout(() => {
-    session.cancelReceive(subscription, new Error('reply timeout'));
+    session.cancelReceive(subscription);
     discardMessages(null, subscription, session);
   }, replyTimeout) : undefined;
 

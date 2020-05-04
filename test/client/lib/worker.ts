@@ -60,6 +60,10 @@ export function node(address: number, route: Route, init?: Packet) {
         throw receiveResult.error;
       }
 
+      if (receiveResult.cancelled) {
+        throw new Error('cancelled');
+      }
+
       const message = receiveResult.value;
 
       const readResult = await readJson(message.body);

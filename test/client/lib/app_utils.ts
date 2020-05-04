@@ -77,10 +77,13 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     return error;
   }
 
-  const disconnectError = await session.disconnect();
+  if (!session.isDisconnected()) {
+    
+    const disconnectError = await session.disconnect();
 
-  if (disconnectError) {
-    return error(`Disconnect error: ${disconnectError.message}`);
+    if (disconnectError) {
+      return error(`Disconnect error: ${disconnectError.message}`);
+    }
   }
 
   log('Disconnected');

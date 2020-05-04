@@ -36,7 +36,7 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
 
   const messageResult = await session.receive(subscription);
 
-  if (messageResult.error) {
+  if (messageResult.error || messageResult.cancelled) {
     return;
   }
 
@@ -61,5 +61,5 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
     }
   }
 
-  discardMessages(ack, subscription, session);
+  return discardMessages(ack, subscription, session);
 }

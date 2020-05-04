@@ -66,8 +66,11 @@ async function speedtest() {
       const receiveResult = await session.receive(subscription);
       
       if (receiveResult.error) {
-        console.log(receiveResult.error);
         throw receiveResult.error;
+      }
+
+      if (receiveResult.cancelled) {
+        break;
       }
 
       const message = receiveResult.value;

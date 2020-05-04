@@ -5,7 +5,17 @@ import {
 } from '../frame/protocol';
 
 import { FrameHeaders } from '../frame/header';
-import { success, fail, Result, VoidResult } from '../result';
+import { 
+  success, 
+  cancel, 
+  fail, 
+  Result, 
+  SuccessResult,
+  FailResult,
+  VoidResult, 
+  CancelResult 
+} from '../result';
+
 import { Transport } from '../transport';
 
 import {
@@ -24,13 +34,14 @@ export type SendResult = VoidResult;
 type SendFrameCallback = (result: SendResult) => void;
 type SendFrameRequest = [Frame, number, SendFrameCallback];
 
-export type MessageResult = Result<Frame>;
+export type MessageResult = Result<Frame> | CancelResult;
 
 type MessageCallback = (result: MessageResult) => void;
 
 import { RECEIPT_NOT_REQUESTED, RECEIPT_DEFAULT_TIMEOUT } from './receipt';
 
 const ERROR_DISCONNECTED = 'session disconnected';
+const ERROR_INTERRUPTED = 'operation interrupted';
 const ERROR_RECEIPT_TIMEOUT = 'receipt timeout';
 
 interface ReceiptRequest {
@@ -325,7 +336,7 @@ export class ClientSession implements Receivable {
       }
 
       if (this.messageRequests.hasOwnProperty(id)) {
-        this.messageRequests[id](fail(new Error('operation cancelled')));
+        this.messageRequests[id](cancel());
         this.receiveFrameRequests -= 1;
       }
 
@@ -339,9 +350,8 @@ export class ClientSession implements Receivable {
    * Cancel a pending receive message operation.
    *
    * @param subscription
-   * @param error The error object to pass back as the operation fail result
    */
-  public cancelReceive(subscription: Subscription, error: Error): void {
+  public cancelReceive(subscription: Subscription): void {
 
     const id = subscription.id;
 
@@ -353,7 +363,7 @@ export class ClientSession implements Receivable {
 
     delete this.messageRequests[id];
 
-    request(fail(error));
+    request(cancel());
   }
 
   /**
@@ -437,11 +447,11 @@ export class ClientSession implements Receivable {
 
     this.disconnectError = error;
 
-    const localError = new Error(ERROR_DISCONNECTED);
-    
-    this.cancelAllSendRequests(localError);
+    const operationError = new Error(this.disconnected ? ERROR_DISCONNECTED : ERROR_INTERRUPTED);
 
-    this.cancelAllReceiveRequests(localError);
+    this.shutdownSendRequests(operationError);
+
+    this.shutdownReceiveRequests(operationError);
 
     this.transport.close();
   }
@@ -572,10 +582,6 @@ export class ClientSession implements Receivable {
 
   private addReceiveRequest() {
 
-    if (this.receiveFrameRequests < 0) {
-      console.log('WTF');
-    }
-
     this.receiveFrameRequests += 1;
 
     if (!this.receiveLoopRunning) {
@@ -605,8 +611,8 @@ export class ClientSession implements Receivable {
 
       case 'MESSAGE': {
 
-        const [readEndObserved, emitReadBodyFinished] = createEmitter<Error | void>();
-        const decoratedBody = createEmitEndDecorator(frame.body, emitReadBodyFinished);
+        const [readEndObserved, emitReadEnd] = createEmitter<Error | void>();
+        const decoratedBody = createEmitEndDecorator(frame.body, emitReadEnd);
 
         const subscriptionId = frame.headers.get('subscription');
 
@@ -616,7 +622,7 @@ export class ClientSession implements Receivable {
 
         const callback = this.messageRequests[subscriptionId];
 
-        const messageFrame = {
+        const message = {
           ...frame, 
           body: decoratedBody
         };
@@ -625,11 +631,10 @@ export class ClientSession implements Receivable {
           
           delete this.messageRequests[subscriptionId];
 
-          callback(success(messageFrame));
+          callback(success(message));
         }
         else {
-          console.log('unhandled message');
-          this.unhandledMessage = messageFrame;
+          this.unhandledMessage = message;
         }
 
         await readEndObserved;
@@ -693,7 +698,7 @@ export class ClientSession implements Receivable {
     return true;
   }
 
-  private cancelAllSendRequests(error: Error) {
+  private shutdownSendRequests(error: Error) {
 
     this.sendQueue.forEach(([_frame, _timeout, callback]) => {
       callback(error);
@@ -702,7 +707,7 @@ export class ClientSession implements Receivable {
     this.sendQueue = [];
   }
 
-  private cancelAllReceiveRequests(error: Error) {
+  private shutdownReceiveRequests(error: Error) {
 
     this.receiveFrameRequests = 0;
 
@@ -711,7 +716,9 @@ export class ClientSession implements Receivable {
       request.callback(error);
     });
 
-    Object.values(this.messageRequests).forEach(callback => callback(fail(error)));
+    const messageRequestResult = this.disconnectError ? fail(error) : cancel();
+
+    Object.values(this.messageRequests).forEach(callback => callback(messageRequestResult));
 
     this.messageRequests = {};
     this.receiptRequests = {};
@@ -735,7 +742,7 @@ export class ClientSession implements Receivable {
 
           const callback = this.messageRequests[id];
 
-          callback(fail(new Error('subscription closed')));
+          callback(cancel());
 
           delete this.messageRequests[id];
         }
