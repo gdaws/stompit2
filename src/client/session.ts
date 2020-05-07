@@ -709,19 +709,22 @@ export class ClientSession implements Receivable {
 
   private shutdownReceiveRequests(error: Error) {
 
+    const receiptRequests = this.receiptRequests;
+    const messageRequests = this.messageRequests;
+
     this.receiveFrameRequests = 0;
 
-    Object.values(this.receiptRequests).forEach(request => {
+    this.messageRequests = {};
+    this.receiptRequests = {};
+
+    Object.values(receiptRequests).forEach(request => {
       clearTimeout(request.timeout);
       request.callback(error);
     });
 
     const messageRequestResult = this.disconnectError ? fail(error) : cancel();
 
-    Object.values(this.messageRequests).forEach(callback => callback(messageRequestResult));
-
-    this.messageRequests = {};
-    this.receiptRequests = {};
+    Object.values(messageRequests).forEach(callback => callback(messageRequestResult));
   }
 
   private observeSendCompletion(frame: Frame) {

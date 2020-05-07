@@ -99,8 +99,6 @@ export class NetSocket implements Transport {
    */
   public async readFrame(protocolVersion: ProtocolVersion) {
 
-    //console.log('readFrame', this.socket.localPort);
-
     if (this.sessionClosed) {
       return fail(new Error('Network connection closed'));
     }
@@ -118,8 +116,6 @@ export class NetSocket implements Transport {
       this.socket.destroy();
       return fail(result.error);
     }
-
-    //console.log(result.value.command, this.socket.localPort);
 
     if (!this.sessionStarted) {
 
