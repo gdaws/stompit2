@@ -116,6 +116,8 @@ export class ClientSession implements Receivable {
   private receiveFrameRequests: number;
   private receiveLoopRunning: boolean;
 
+  private subscriptions: Set<string>;
+
   private messageRequests: {[subscriptionId: string]: MessageCallback};
   private unhandledMessage: Frame | undefined;
 
@@ -150,6 +152,8 @@ export class ClientSession implements Receivable {
 
     this.sendLoopRunning = false;
     this.receiveLoopRunning = false;
+
+    this.subscriptions = new Set();
 
     this.receiveFrameRequests = 0;
 
@@ -634,7 +638,13 @@ export class ClientSession implements Receivable {
           callback(success(message));
         }
         else {
-          this.unhandledMessage = message;
+          const id = message.headers.get('subscription');
+          if (id && this.subscriptions.has(id)) {
+            this.unhandledMessage = message;
+          }
+          else {
+            return this.shutdown(new Error('unhandled message'));
+          }
         }
 
         await readEndObserved;
@@ -709,6 +719,8 @@ export class ClientSession implements Receivable {
 
   private shutdownReceiveRequests(error: Error) {
 
+    this.subscriptions.clear();
+
     const receiptRequests = this.receiptRequests;
     const messageRequests = this.messageRequests;
 
@@ -737,11 +749,30 @@ export class ClientSession implements Receivable {
 
         break;
 
+      case 'SUBSCRIBE': {
+
+        const id = frame.headers.get('id');
+
+        if (!id) {
+          break;
+        }
+
+        this.subscriptions.add(id);
+
+        break;
+      }
+
       case 'UNSUBSCRIBE':{
 
         const id = frame.headers.get('id');
 
-        if (id !== undefined && this.messageRequests.hasOwnProperty(id)) {
+        if (!id) {
+          break;
+        }
+
+        this.subscriptions.delete(id);
+
+        if (this.messageRequests.hasOwnProperty(id)) {
 
           const callback = this.messageRequests[id];
 
