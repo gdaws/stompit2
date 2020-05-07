@@ -778,3 +778,67 @@ test('unhandled message', async() => {
 
   expect(error.message).toBe('unhandled message');
 });
+
+test('receive unhandled message', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  const subscribeResult = await session.subscribe('/queue/test');
+
+  if (subscribeResult.error) {
+    expect(subscribeResult.error).toBeUndefined();
+    return;
+  }
+
+  const subscription = subscribeResult.value;
+
+  server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
+
+  // call receive for another subscription to get the receive loop running
+  session.receive({id: '2', headers: new FrameHeaders([])});
+
+  const receiveResult = await session.receive({id: subscription.id, headers: new FrameHeaders([])});
+
+  if (receiveResult.error) {
+    expect(receiveResult.error).toBeUndefined();
+    return;
+  }
+
+  if (receiveResult.cancelled) {
+    expect(receiveResult.cancelled).toBeUndefined();
+    return;
+  }
+});
+
+test('unhandled message after unsubscribe', async() => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  const subscribeResult = await session.subscribe('/queue/test');
+
+  if (subscribeResult.error) {
+    expect(subscribeResult.error).toBeUndefined();
+    return;
+  }
+
+  const subscription = subscribeResult.value;
+
+  await session.unsubscribe(subscription);
+  
+  server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
+
+  // call receive for another subscription to get the receive loop running
+  await session.receive({id: '2', headers: new FrameHeaders([])});
+
+  expect(session.isDisconnected()).toBe(true);
+
+  const disconnectError = session.getDisconnectError();
+
+  if (!disconnectError) {
+    expect(disconnectError).toBeDefined();
+  }
+  
+  expect(disconnectError?.message).toBe('unhandled message');
+});
