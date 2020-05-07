@@ -385,8 +385,12 @@ test('unsubscribe cancels receive', async () => {
 
   const result = await receive;
 
-  expect(result.error).toBeDefined();
-  expect(result.error?.message).toBe('subscription closed');
+  if (result.error) {
+    expect(result.error).toBeUndefined();
+    return;
+  }
+
+  expect(result.cancelled).toBe(true);
 });
 
 test('ack', async () => {
@@ -449,6 +453,11 @@ test('receive', async () => {
     return;
   }
   
+  if (result.cancelled) {
+    expect(result.cancelled).toBe(false);
+    return;
+  }
+
   expect(result.value).toBeDefined();
 
   const message = result.value;
@@ -478,12 +487,16 @@ test('cancelReceive', async () => {
 
   const receive = session.receive(dummySubscription);
 
-  session.cancelReceive(dummySubscription, new Error('foo'));
+  session.cancelReceive(dummySubscription);
 
   const result = await receive;
 
-  expect(result.error).toBeDefined();
-  expect(result.error?.message).toBe('foo');
+  if (result.error) {
+    expect(result.error).toBeUndefined();
+    return;
+  }
+
+  expect(result.cancelled).toBe(true);
 });
 
 test('receive reset', async () => {
@@ -512,15 +525,27 @@ test('receive reset', async () => {
     return;
   }
 
-  expect(result1.error).toBeDefined();
-  expect(result1.error?.message).toBe('operation cancelled');
+  if (result1.error) {
+    expect(result1.error).toBeUndefined();
+    return;
+  }
+
+  expect(result1.cancelled).toBe(true);
 
   if (!result2) {
     expect(result2).toBeDefined();
     return;
   }
 
-  expect(result2.error).toBeUndefined();
+  if (result2.error) {
+    expect(result2.error).toBeUndefined();
+    return;
+  }
+
+  if (result2.cancelled) {
+    expect(result2.cancelled).toBe(false);
+    return;
+  }
 });
 
 test('readFrame fail', async () => {
@@ -643,8 +668,12 @@ test('disconnect cancels receive', (done) => {
       return;
     }
 
-    expect(messageResult.error).toBeDefined();
-    expect(messageResult.error?.message).toBe('session disconnected');
+    if (messageResult.error) {
+      expect(messageResult.error).toBeUndefined();
+      return;
+    }
+
+    expect(messageResult.cancelled).toBe(true);
 
     expect(disconnectError).toBeUndefined();
 
@@ -716,8 +745,12 @@ test('shutdown cancels receive', (done) => {
 
   message.then(result => {
 
-    expect(result.error).toBeDefined();
-    expect(result.error?.message).toBe('session disconnected');
+    if (result.error) {
+      expect(result.error).toBeUndefined();
+      return;
+    }
+
+    expect(result.cancelled).toBe(true);
 
     done();
   });
