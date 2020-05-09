@@ -468,10 +468,6 @@ export class ClientSession implements Receivable {
    */
   public send(frame: Frame, receiptTimeout: number = RECEIPT_DEFAULT_TIMEOUT): Promise<SendResult> {
 
-    if (this.disconnected) {
-      return Promise.resolve(new Error(ERROR_DISCONNECTED));
-    }
-
     const requiredHeaders: {[command: string]: string[]} = {
       'SEND': ['destination'],
       'SUBSCRIBE': ['destination', 'id'],
@@ -501,6 +497,14 @@ export class ClientSession implements Receivable {
   }
 
   private sendLoop(framePrototype: Frame, receiptTimeout: number, callback: SendFrameCallback) {
+
+    if (this.disconnected) {
+
+      callback(new Error(ERROR_DISCONNECTED));
+
+      this.sendLoopRunning = false;
+      return;
+    }
 
     const frame = {...framePrototype};
     
