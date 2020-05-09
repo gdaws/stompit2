@@ -40,7 +40,7 @@ export class NetSocket implements Transport {
   public static getLimitDefaults(): TransportLimits {
     return {
       operationTimeout: 3000,
-      desiredReadRate: 0,
+      desiredReadRate: 3000,
       desiredWriteRate: 0,
       delayTolerance: 400,
       readLimits: {
@@ -107,12 +107,12 @@ export class NetSocket implements Transport {
       ...this.limits.readLimits,
       protocolVersion,
       ignoreLeadingEmptyLines: this.sessionStarted
+
     };
 
     const result = await readFrame(this.reader, params);
 
     if (result.error) {
-      console.log('readFrame error', result.error);
       this.socket.destroy();
       return fail(result.error);
     }
