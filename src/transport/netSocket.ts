@@ -20,6 +20,9 @@ export class NetSocket implements Transport {
   private reader: Reader;
   private writing: boolean;
 
+  private readRateTimer: NodeJS.Timeout | undefined;
+  private writeRateTimer: NodeJS.Timeout | undefined;
+
   private sessionStarted: boolean;
   private sessionClosed: boolean;
 
@@ -107,7 +110,6 @@ export class NetSocket implements Transport {
       ...this.limits.readLimits,
       protocolVersion,
       ignoreLeadingEmptyLines: this.sessionStarted
-
     };
 
     const result = await readFrame(this.reader, params);
@@ -172,9 +174,13 @@ export class NetSocket implements Transport {
       protocolVersion
     };
 
-    if (!this.sessionStarted) {
+    switch (frame.command) {
 
-      if ('CONNECT' === frame.command) {
+      case 'CONNECT': {
+
+        if (this.sessionStarted) {
+          return new Error('session already started');
+        }
 
         if (frame.headers.has('heart-beat')) {
           frame.headers = frame.headers.filter(([name, _value]) => 'heart-beat' === name);
@@ -192,8 +198,15 @@ export class NetSocket implements Transport {
             ].join(',')]
           ]));
         }
+
+        break;
       }
-      else if ('CONNECTED' === frame.command) {
+
+      case 'CONNECTED': {
+
+        if (this.sessionStarted) {
+          return new Error('session already started');
+        }
 
         this.sessionStarted = true;
 
@@ -202,6 +215,8 @@ export class NetSocket implements Transport {
         frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
           ['heart-beat', '0,0']
         ]));
+
+        break;
       }
     }
 
@@ -221,6 +236,16 @@ export class NetSocket implements Transport {
 
     this.sessionClosed = true;
 
+    if (this.readRateTimer) {
+      clearInterval(this.readRateTimer);
+      this.readRateTimer = undefined;
+    }
+
+    if (this.writeRateTimer) {
+      clearInterval(this.writeRateTimer);
+      this.writeRateTimer = undefined;
+    }
+
     if(this.socket.destroyed) {
       return;
     }
@@ -232,7 +257,7 @@ export class NetSocket implements Transport {
 
     let lastBytesRead = this.socket.bytesRead;
     
-    interval(() => {
+    this.readRateTimer = setInterval(() => {
 
       const bytesRead = this.socket.bytesRead;
 
@@ -253,11 +278,7 @@ export class NetSocket implements Transport {
 
     const LF = Buffer.from('\n', 'ascii');
 
-    interval(() => {
-
-      if (this.sessionClosed || this.socket.destroyed) {
-        return false;
-      }
+    this.writeRateTimer = setInterval(() => {
 
       const bytesWritten = this.socket.bytesWritten;
 
@@ -266,17 +287,7 @@ export class NetSocket implements Transport {
       }
 
       lastBytesWritten = bytesWritten;
-      return true;
 
     }, milliseconds);
   }
-}
-
-function interval(callback: () => boolean, milliseconds: number) {
-  const timeout = setInterval(function () {
-    const cont = callback();
-    if (!cont) {
-      clearInterval(timeout);
-    }
-  }, milliseconds);
 }
