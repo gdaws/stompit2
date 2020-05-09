@@ -11,6 +11,9 @@ import {
   STOMP_VERSION_12 
 } from './protocol';
 
+const NUL = 0;
+const LF = 10;
+
 export interface WriteLimits {
 
   /**
@@ -97,7 +100,7 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
     written = writeEnd;
   }
 
-  if (undefined !== expectedContentLength && written + expectedContentLength + 1 < writeEnd) {
+  if (undefined !== expectedContentLength && written + expectedContentLength + 2 < writeEnd) {
 
     // The frame body size is known and it and the frame header are small enough to fit
     // in the buffer and let us make a single write call to the transport
@@ -125,9 +128,10 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
       return new Error('incorrect content-length header');
     }
 
-    buffer[written] = 0;
+    buffer[written] = NUL;
+    buffer[written + 1] = LF;
 
-    written += 1;
+    written += 2;
 
     const error = await writer.write(buffer.slice(0, written));
 
@@ -159,9 +163,10 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
       }
     }
 
-    buffer[0] = 0;
+    buffer[0] = NUL;
+    buffer[1] = LF;
 
-    const writeTrailerError = await writer.write(buffer.slice(0, 1));
+    const writeTrailerError = await writer.write(buffer.slice(0, 2));
 
     if (writeTrailerError) {
       return writeTrailerError;
