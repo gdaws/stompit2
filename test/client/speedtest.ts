@@ -1,7 +1,6 @@
 import { session, logger } from './lib/app_utils';
 import { FrameHeaders } from '../../src/frame/header';
-import { readString, writeString } from '../../src/frame/body';
-import { discardMessages } from '../../src/client/message';
+import { readString, writeString, writeBuffer } from '../../src/frame/body';
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -9,14 +8,14 @@ function sleep(ms: number) {
 
 async function speedtest() {
 
-  //const buf = Buffer.alloc(10);
-  //console.log(crypto.randomFillSync(buf).toString('hex'));
-
   const log = logger('Supervisor');
 
-  const duration = 2000;
+  const duration = 5000;
+  const bodySize = 128;
   const queueName = '/queue/speedtest';
  
+  const messageBody = Buffer.alloc(bodySize);
+
   let running = true;
 
   let sent = 0;
@@ -31,9 +30,10 @@ async function speedtest() {
       const message = {
         command: 'SEND', 
         headers: new FrameHeaders([
-          ['Destination', queueName]
+          ['Destination', queueName],
+          ['Content-length', '' + bodySize]
         ]),
-        body: writeString('test')
+        body: writeBuffer(messageBody)
       };
 
       const sendError = await session.send(message);
@@ -75,12 +75,12 @@ async function speedtest() {
 
       const message = receiveResult.value;
 
-      const readResult = await readString(message.body);
-
-      if (readResult.error) {
-        throw readResult.error;
+      for await (const chunkResult of message.body) {
+        if (chunkResult.error) {
+          throw chunkResult.error;
+        }
       }
-  
+
       received += 1;
     }
   });
@@ -99,7 +99,6 @@ async function speedtest() {
 
   log(`Producer message rate: ${Math.round(sent / elapsed * 1000)}/s`);
   log(`Consumer message rate: ${Math.round(received / elapsed * 1000)}/s`);
-
 }
 
 speedtest();
