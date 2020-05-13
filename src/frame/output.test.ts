@@ -73,7 +73,7 @@ describe('writeFrame', () => {
       body: writeEmptyBody() 
     };
 
-    expect(await writeValid(frame)).toBe('CONNECT\naccept-version:1.2\nhost:\/\n\n\x00');
+    expect(await writeValid(frame)).toBe('CONNECT\naccept-version:1.2\nhost:\/\n\n\x00\n');
   });
 
   test('dynamic size', async () => {
@@ -89,7 +89,7 @@ describe('writeFrame', () => {
       })()
     };
 
-    expect(await writeValid(frame)).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00');
+    expect(await writeValid(frame)).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00\n');
   });
 
   test('fixed size', async () => {
@@ -106,7 +106,7 @@ describe('writeFrame', () => {
       })()
     };
 
-    expect(await writeValid(frame)).toBe('SEND\ndestination:\/queue\/a\ncontent-length:5\n\nhello\x00');
+    expect(await writeValid(frame)).toBe('SEND\ndestination:\/queue\/a\ncontent-length:5\n\nhello\x00\n');
   });
 
   test('bufferless', async () => {
@@ -122,7 +122,7 @@ describe('writeFrame', () => {
       })()
     };
 
-    expect(await writeValid(frame, {...someWriteParams, bufferSize: 0})).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00');
+    expect(await writeValid(frame, {...someWriteParams, bufferSize: 0})).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00\n');
   });
   
   test('invalid content-length header', async () => {
@@ -197,7 +197,7 @@ describe('writeFrame', () => {
     };
 
     expect(await writeValid(frame, {...someWriteParams, protocolVersion: STOMP_VERSION_11}))
-      .toBe('SEND\ndestination:queue\\ca\\nqueue\\cb\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00')
+      .toBe('SEND\ndestination:queue\\ca\\nqueue\\cb\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00\n')
     ;
   });
 
@@ -213,7 +213,7 @@ describe('writeFrame', () => {
     };
 
     expect(await writeValid(frame, {...someWriteParams, protocolVersion: STOMP_VERSION_12}))
-      .toBe('SEND\ndestination:queue\\ca\\r\\nqueue\\cb\\r\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00')
+      .toBe('SEND\ndestination:queue\\ca\\r\\nqueue\\cb\\r\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00\n')
     ;
   });
 });
