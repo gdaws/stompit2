@@ -40,6 +40,10 @@ export class NetSocket implements Transport {
     this.sessionClosed = false;
   }
 
+  public getSocket() {
+    return this.socket;
+  }
+
   public static getLimitDefaults(): TransportLimits {
     return {
       operationTimeout: 3000,
@@ -127,36 +131,11 @@ export class NetSocket implements Transport {
 
         this.sessionStarted = true;
 
-        const heartBeatString = frame.headers.get('heart-beat');
+        const heartbeat = this.processHeartBeatHeader(frame.headers);
 
-        if (undefined !== heartBeatString) {
-
-          const heartBeatTokens = heartBeatString.match(/^(\d+),(\d+)$/);
-
-          if (null === heartBeatTokens) {
-            this.socket.destroy();
-            return fail(new Error('invalid heart-beat header'));
-          }
-
-          const serverWriteRate = parseInt(heartBeatTokens[1], 10);
-          const serverReadRate = parseInt(heartBeatTokens[2], 10);
-
-          const clientWriteRate = this.limits.desiredWriteRate;
-          const clientReadRate = this.limits.desiredReadRate;
-
-          const enableWriteRate = 0 !== serverReadRate && 0 !== clientWriteRate;
-          const writeRate = enableWriteRate ? Math.max(clientWriteRate, serverReadRate) : undefined;
-
-          if (writeRate) {
-            this.monitorWriteRate(writeRate);
-          }
-
-          const enableReadRate = 0 !== serverWriteRate && 0 !== clientReadRate;
-          const readRate = enableReadRate ? Math.max(clientReadRate, serverWriteRate) : undefined;
-
-          if (readRate) {
-            this.monitorReadRate(readRate + this.limits.delayTolerance);
-          }
+        if (heartbeat.error) {
+          this.socket.destroy();
+          return fail(heartbeat.error);
         }
       }
     }
@@ -210,10 +189,17 @@ export class NetSocket implements Transport {
 
         this.sessionStarted = true;
 
-        // TODO implement support for heart beating server side
+        const heartbeat = this.processHeartBeatHeader(frame.headers, false);
+
+        if (heartbeat.error) {
+          this.socket.destroy();
+          return heartbeat.error;
+        }
+
+        const [sendRate, recvRate] = heartbeat.value;
 
         frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
-          ['heart-beat', '0,0']
+          ['heart-beat', `${sendRate},${recvRate}`]
         ]));
 
         break;
@@ -225,6 +211,10 @@ export class NetSocket implements Transport {
     const result = await writeFrame(frame, this, params);
   
     this.writing = false;
+
+    if ('CONNECTED' === frame.command) {
+      this.processHeartBeatHeader(frame.headers, true);
+    }
 
     return result;
   }
@@ -251,6 +241,43 @@ export class NetSocket implements Transport {
     }
 
     this.socket.end();
+  }
+
+  private processHeartBeatHeader(headers: FrameHeaders, monitor: boolean = true): Result<[number, number]> {
+
+    const heartBeatString = headers.get('heart-beat');
+
+    if (undefined === heartBeatString) {
+      return success([0, 0]);
+    }
+
+    const heartBeatTokens = heartBeatString.match(/^(\d+),(\d+)$/);
+
+    if (null === heartBeatTokens) {
+      return fail(new Error('invalid heart-beat header'));
+    }
+
+    const remoteWriteRate = parseInt(heartBeatTokens[1], 10);
+    const remoteReadRate = parseInt(heartBeatTokens[2], 10);
+
+    const localWriteRate = this.limits.desiredWriteRate;
+    const localReadRate = this.limits.desiredReadRate;
+
+    const enableWriteRate = 0 !== remoteReadRate && 0 !== localWriteRate;
+    const writeRate = enableWriteRate ? Math.max(localWriteRate, remoteReadRate) : 0;
+
+    if (writeRate > 0 && monitor) {
+      this.monitorWriteRate(writeRate);
+    }
+
+    const enableReadRate = 0 !== remoteWriteRate && 0 !== localReadRate;
+    const readRate = enableReadRate ? Math.max(localReadRate, remoteWriteRate) : 0;
+
+    if (readRate > 0 && monitor) {
+      this.monitorReadRate(readRate + this.limits.delayTolerance);
+    }
+
+    return success([writeRate, readRate]);
   }
 
   private monitorReadRate(milliseconds: number) {
@@ -280,10 +307,11 @@ export class NetSocket implements Transport {
 
     this.writeRateTimer = setInterval(() => {
 
-      const bytesWritten = this.socket.bytesWritten;
+      let bytesWritten = this.socket.bytesWritten;
 
       if (bytesWritten === lastBytesWritten && !this.writing) {
         this.write(LF);
+        bytesWritten += 1;
       }
 
       lastBytesWritten = bytesWritten;
