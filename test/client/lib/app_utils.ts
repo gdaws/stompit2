@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { VoidResult } from '../../../src/result';
 import { NetSocket } from '../../../src/transport/netSocket';
 import { connect } from '../../../src/client/connect';
@@ -10,14 +11,12 @@ type SessionHandler = (session: ClientSession, log: LogFunction) => Promise<void
 
 export function getConnectionConfig(): Config | undefined {
 
-  const broker = process.env.BROKER;
+  const broker = process.env.BROKER || '';
 
-  switch (broker) {
-    case 'rabbitmq':
-      const client = require('../../broker/rabbitmq/client');
-      if (client && client.getConnectionConfig) {
-        return client.getConnectionConfig();
-      }
+  const client = require(`../../broker/${path.basename(broker)}/client`);
+  
+  if (client && client.getConnectionConfig) {
+    return client.getConnectionConfig();
   }
 }
 
