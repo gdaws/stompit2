@@ -10,8 +10,6 @@ import {
   cancel, 
   fail, 
   Result, 
-  SuccessResult,
-  FailResult,
   VoidResult, 
   CancelResult 
 } from '../result';
@@ -446,7 +444,7 @@ export class ClientSession implements Receivable {
     }
 
     this.shutdownCalled = true;
-
+  
     this.disconnected = true;
 
     this.disconnectError = error;

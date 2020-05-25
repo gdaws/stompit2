@@ -12,6 +12,7 @@ export interface CancelResult {
 
 export interface FailResult<E> {
   error: E;
+  cancelled: false;
 };
 
 export type Result<T, E = Error> = SuccessResult<T> | FailResult<E>;
@@ -31,7 +32,7 @@ export function cancel(): CancelResult {
  * Construct a fail result
  */
 export function fail<ErrorType>(error: ErrorType): FailResult<ErrorType> {
-  return {error};
+  return {error, cancelled: false};
 }
 
 export type VoidResult<E = Error> = undefined | E;

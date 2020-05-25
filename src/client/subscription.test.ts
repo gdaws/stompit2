@@ -91,6 +91,11 @@ describe('messageQueue', () => {
       return;
     }
 
+    if (result1.cancelled) {
+      expect(result1.cancelled).toBe(false);
+      return;
+    }
+
     const message1 = result1.value;
 
     expect(message1.data).toBe('one');
@@ -99,6 +104,11 @@ describe('messageQueue', () => {
 
     if (result2.error) {
       expect(result2.error).toBeUndefined();
+      return;
+    }
+
+    if (result2.cancelled) {
+      expect(result2.cancelled).toBe(false);
       return;
     }
 

@@ -1,4 +1,4 @@
-import { Result, fail, success } from '../result';
+import { Result, CancelResult, fail, success, cancel } from '../result';
 import { Receivable, Subscription } from './session';
 import { FrameHeaders } from '../frame/header';
 import { FrameBody } from '../frame/protocol';
@@ -8,29 +8,43 @@ type Message<T> = {headers: FrameHeaders, data: T};
 export function messageQueue<T>(session: Receivable, subscription: Subscription, readBody: (body: FrameBody) => Promise<Result<T>>) {
 
   let error: Error | undefined;
+  let cancelled: boolean = false;
 
   const queue: Message<T>[] = [];
-  const consumers: ((message: Result<Message<T>>) => void)[] = [];
+  const consumers: ((message: Result<Message<T>> | CancelResult) => void)[] = [];
 
   const dequeue = () => {
-    while ((queue.length > 0 || undefined !== error) && consumers.length > 0) {
+
+    while (queue.length > 0 && consumers.length > 0) {
 
       const consumer = consumers.shift();
 
       if (!consumer) continue;
 
-      if (!error) {
+      const message = queue.shift();
 
-        const message = queue.shift();
-
-        if (message) {
-          consumer(success(message));
-        }
-      }
-      else {
-        consumer(fail(error));
+      if (message) {
+        consumer(success(message));
       }
     }
+
+    if ((error || cancelled) && consumers.length > 0) {
+
+      while (consumers.length > 0) {
+
+        const consumer = consumers.shift();
+
+        if (!consumer) continue;
+        
+        if (error) {
+          consumer(fail(error));
+        }
+        else {
+          consumer(cancel());
+        }
+      }
+    }
+
   };
 
   const receiveLoop = async () => {
@@ -39,6 +53,12 @@ export function messageQueue<T>(session: Receivable, subscription: Subscription,
 
     if (result.error) {
       error = result.error;
+      dequeue();
+      return;
+    }
+
+    if (result.cancelled) {
+      cancelled = true;
       dequeue();
       return;
     }
@@ -63,7 +83,7 @@ export function messageQueue<T>(session: Receivable, subscription: Subscription,
 
   receiveLoop();
 
-  return (): Promise<Result<Message<T>>> => {
+  return (): Promise<Result<Message<T>> | CancelResult> => {
     return new Promise((resolve) => {
       consumers.push(resolve);
       dequeue();
