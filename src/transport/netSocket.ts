@@ -11,6 +11,9 @@ import { readFrame } from '../frame/input';
 import { writeFrame } from '../frame/output';
 import { RECEIPT_NOT_REQUESTED } from '../client/receipt';
 
+const ERROR_SESSION_TIMEOUT = 'session timeout';
+const ERROR_SESSION_CLOSED = 'Network connection closed';
+
 export class NetSocket implements Transport {
 
   private socket: Socket;
@@ -25,6 +28,7 @@ export class NetSocket implements Transport {
 
   private sessionStarted: boolean;
   private sessionClosed: boolean;
+  private sessionTimeout: boolean;
 
   public constructor(socket: Socket, limits: TransportLimits, sessionStarted: boolean = false) {
 
@@ -38,6 +42,7 @@ export class NetSocket implements Transport {
 
     this.sessionStarted = sessionStarted;
     this.sessionClosed = false;
+    this.sessionTimeout = false;
   }
 
   public getSocket() {
@@ -107,7 +112,12 @@ export class NetSocket implements Transport {
   public async readFrame(protocolVersion: ProtocolVersion) {
 
     if (this.sessionClosed) {
-      return fail(new Error('Network connection closed'));
+      if (this.sessionTimeout) {
+        return fail(new Error(ERROR_SESSION_TIMEOUT));
+      }
+      else {
+        return fail(new Error(ERROR_SESSION_CLOSED));
+      }
     }
 
     const params = {
@@ -147,6 +157,15 @@ export class NetSocket implements Transport {
    * @inheritdoc
    */
   public async writeFrame(frame: Frame, protocolVersion: ProtocolVersion) {
+
+    if (this.sessionClosed) {
+      if (this.sessionTimeout) {
+        return new Error(ERROR_SESSION_TIMEOUT);
+      }
+      else {
+        return new Error(ERROR_SESSION_CLOSED);
+      }
+    }
 
     const params = {
       ...this.limits.writeLimits,
@@ -289,12 +308,13 @@ export class NetSocket implements Transport {
       const bytesRead = this.socket.bytesRead;
 
       if (bytesRead === lastBytesRead) {
-        this.socket.destroy(new Error('session timeout'));
-        return false;
+        this.sessionTimeout = true;
+        this.socket.destroy(new Error(ERROR_SESSION_TIMEOUT));
+        this.close();
+        return;
       }
 
       lastBytesRead = bytesRead;
-      return true;
 
     }, milliseconds);
   }
