@@ -13,10 +13,15 @@ export function getConnectionConfig(): Config | undefined {
 
   const broker = process.env.BROKER || '';
 
-  const client = require(`../../broker/${path.basename(broker)}/client`);
-  
-  if (client && client.getConnectionConfig) {
-    return client.getConnectionConfig();
+  try {
+    const client = require(`../../broker/${path.basename(broker)}/client`);
+     
+    if (client && client.getConnectionConfig) {
+      return client.getConnectionConfig();
+    }
+  }
+  catch(error) {
+    return;
   }
 }
 
@@ -71,7 +76,11 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     await handler(session, log);
   }
   catch (error) {
-    log(`Handler aborted: ${error.message}`);
+
+    const disconnectError = session.getDisconnectError();
+
+    log(`Handler aborted: ${disconnectError ? disconnectError.message : error.message}`);
+
     session.shutdown();
     return error;
   }
