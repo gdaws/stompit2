@@ -12,7 +12,7 @@ import {
 import { FrameBody, FrameBodyChunk } from './protocol';
 import { Chunk, alloc, concatPair, decodeString } from '../stream/chunk';
 import { success } from '../result';
-import { createEmitter } from '../emitter';
+import { createSignal } from '../concurrency';
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
 
@@ -131,7 +131,7 @@ test('writeJson', async () => {
 
 test('createEmitEndDecorator', async () => {
 
-  const [signal, emit] = createEmitter<Error | void>();
+  const [signal, emit] = createSignal<Error | void>();
 
   const body = createEmitEndDecorator(writeEmptyBody(), emit);
 
@@ -144,4 +144,3 @@ test('createEmitEndDecorator', async () => {
   expect(result).toBeUndefined();
   expect(status.done).toBe(true);
 });
-

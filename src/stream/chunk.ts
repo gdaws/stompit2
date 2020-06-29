@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from 'util';
 export type TextEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1";
 
 export type Chunk = Uint8Array;
-export type ChunkStream = AsyncGenerator<Chunk>;
+export type ChunkStream = AsyncIterator<Chunk>;
 
 const allocImpl = Buffer && Buffer.alloc ? Buffer.alloc : (length: number) => new Uint8Array(length);
 const allocUnsafeImpl = Buffer && Buffer.allocUnsafe ? Buffer.allocUnsafe : (length: number) => new Uint8Array(length);

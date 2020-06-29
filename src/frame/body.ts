@@ -1,6 +1,6 @@
 import { success, fail, Result } from '../result';
 import { TextEncoding } from '../stream/chunk';
-import { Emitter } from '../emitter';
+import { SignalEmitter } from '../concurrency';
 import { FrameBody } from './protocol';
 import { TextEncoder, TextDecoder } from 'util';
 
@@ -140,7 +140,7 @@ export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'
  * 
  * Observe when the frame handler has finished reading the body
  */
-export async function* createEmitEndDecorator(actual: FrameBody, onEnd: Emitter<Error | void>): FrameBody {
+export async function* createEmitEndDecorator(actual: FrameBody, onEnd: SignalEmitter<Error | void>): FrameBody {
 
   for await (const chunk of actual) {
 

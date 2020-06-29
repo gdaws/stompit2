@@ -25,7 +25,7 @@ import {
 /**
  * @hidden 
  */
-import { createEmitter } from '../emitter';
+import { createSignal } from '../concurrency';
 
 export type SendResult = VoidResult;
 
@@ -617,7 +617,7 @@ export class ClientSession implements Receivable {
 
       case 'MESSAGE': {
 
-        const [readEndObserved, emitReadEnd] = createEmitter<Error | void>();
+        const [readEndObserved, emitReadEnd] = createSignal<Error | void>();
         const decoratedBody = createEmitEndDecorator(frame.body, emitReadEnd);
 
         const subscriptionId = frame.headers.get('subscription');

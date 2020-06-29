@@ -89,6 +89,7 @@ class MockServer implements Transport {
 
   public close() {
     this.calls.push(['close', [...arguments]]);
+    return Promise.resolve();
   }
 }
 
