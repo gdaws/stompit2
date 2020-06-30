@@ -55,12 +55,12 @@ export class NetSocketStream implements TransportStream {
   }
 }
 
-export function createNetTransport(options: SocketConnectOpts, limits?: Partial<TransportLimits>, sessionStarted: boolean = false): Promise<Result<StandardTransport>> {
+export function createNetTransport(options: SocketConnectOpts, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
 
   return new Promise((resolve) => {
     const socket = createConnection(options, () => {
       const stream = new NetSocketStream(socket);
-      resolve(success(new StandardTransport(stream, {...limitDefaults, ...(limits || {})}, sessionStarted)));
+      resolve(success(new StandardTransport(stream, {...limitDefaults, ...(limits || {})})));
     });
     socket.once('error', (error) => {
       resolve(fail(error));
