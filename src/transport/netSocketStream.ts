@@ -55,7 +55,7 @@ export class NetSocketStream implements TransportStream {
   }
 }
 
-export function createNetTransport(options: SocketConnectOpts, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
+export function connect(options: SocketConnectOpts, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
 
   return new Promise((resolve) => {
     const socket = createConnection(options, () => {
