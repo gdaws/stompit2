@@ -1,6 +1,13 @@
-import { TransportStream } from '../transport';
+import { Result, success, fail } from '../result';
 import { Chunk, encodeUtf8String } from '../stream/chunk';
 import { createQueue, Producer } from '../queue';
+
+import { 
+  TransportStream, 
+  TransportLimits,
+  StandardTransport,
+  limitDefaults
+} from '../transport';
 
 export class WebSocketStream implements TransportStream {
 
@@ -146,4 +153,21 @@ export class WebSocketStream implements TransportStream {
   public close() {
     this.socket.close();
   }
+}
+
+export function createWSTransport(url: string, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
+
+  return new Promise((resolve) => {
+    
+    try {
+      const socket = new WebSocket(url);
+
+      socket.binaryType = 'arraybuffer';
+  
+      resolve(success(new StandardTransport(new WebSocketStream(socket), {...limitDefaults, ...(limits || {})})));
+    }
+    catch (error) {
+      resolve(fail(error));
+    }
+  });
 }
