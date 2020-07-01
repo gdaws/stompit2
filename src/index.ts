@@ -1,4 +1,32 @@
+import { Result, fail } from './result';
+import { FrameHeaders } from './frame/header';
+import { Transport } from './transport';
+import { connect as stompConnectImpl } from './client/connect';
+import { ClientSession } from './client/session';
 
-import { connect } from './client/connect';
+export { jsonMessage } from './client/message';
 
-export { connect };
+/**
+ * Establish a STOMP session with the server over a transport
+ *
+ * @param transportConnect A connecting or connected transport
+ * @param hostHeader Broker vhost value
+ * @param username Credential used by broker to perform authentication
+ * @param password Credential used by broker to perform authentication
+ */
+export async function stompConnect(transportConnect: Promise<Result<Transport>>, hostHeader: string, username: string, password: string): Promise<Result<ClientSession>> {
+
+  const transConnectResult = await transportConnect;
+
+  if (transConnectResult.error) {
+    return fail(transConnectResult.error);
+  }
+
+  const transport = transConnectResult.value;
+
+  return stompConnectImpl(transport, FrameHeaders.fromEntries([
+    ['host', hostHeader],
+    ['username', username],
+    ['passcode', password]
+  ]));
+}

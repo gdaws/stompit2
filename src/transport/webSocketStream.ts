@@ -155,7 +155,7 @@ export class WebSocketStream implements TransportStream {
   }
 }
 
-export function connect(url: string, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
+export function wsConnect(url: string, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
 
   return new Promise((resolve) => {
 

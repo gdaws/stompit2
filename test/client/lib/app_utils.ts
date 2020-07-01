@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { VoidResult } from '../../../src/result';
-import { createNetTransport } from '../../../src/transport/netSocketStream';
+import { netConnect } from '../../../src/transport/netSocketStream';
 import { connect } from '../../../src/client/connect';
 import { ClientSession } from '../../../src/client/session';
 import { FrameHeaders } from '../../../src/frame/header';
@@ -47,7 +47,7 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     return error('Config not found: BROKER env unset or the broker service is not running');
   }
 
-  const tcpConnectResult = await createNetTransport({
+  const tcpConnectResult = await netConnect({
     host: config.host,
     port: config.port
   });
