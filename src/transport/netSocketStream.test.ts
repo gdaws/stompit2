@@ -10,7 +10,7 @@ const serverListeningSocket = createServer();
 
 const listening = new Promise((resolve, reject) => {
   serverListeningSocket.on('error', reject);
-  serverListeningSocket.listen(resolve);
+  serverListeningSocket.listen(0, '0.0.0.0', resolve);
 });
 
 const prepareServer = () => {
@@ -51,7 +51,7 @@ function connect(): Promise<[NetSocketStream, NetSocketStream]> {
     else {
       options = {
         port: serverAddress.port,
-        host: serverAddress.family === 'IPv4' ? '127.0.0.1' : '::1'
+        host: '127.0.0.1'
       };
     }
 
