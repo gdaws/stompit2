@@ -1,8 +1,8 @@
-import { Subscription, ClientSession } from './session';
+import { Receivable, AckSendable, Subscription, ClientSession } from './session';
 import { RECEIPT_DEFAULT_TIMEOUT } from './receipt';
 import { FrameHeaders } from '../frame/header';
 import { writeBuffer } from '../frame/body';
-import { Frame, getAckMode } from '../frame/protocol';
+import { Frame, getAckMode, ProtocolVersion } from '../frame/protocol';
 
 /**
  * A helper function to construct a sendable JSON message.
@@ -27,12 +27,17 @@ export function jsonMessage(destination: string, content: any): Frame {
   };
 }
 
+
+interface Session extends Receivable {
+  getProtocolVersion(): ProtocolVersion;
+}
+
 /**
  * A helper function that discards all messages received on a subscription.
  * 
  * @param ack The acknowledgement message type to send to the server. Pass null argument to not send any acknowledgements.
  */
-export async function discardMessages(ack: null | 'ack' | 'nack', subscription: Subscription, session: ClientSession): Promise<void> {
+export async function discardMessages(ack: null | 'ack' | 'nack', subscription: Subscription, session: Receivable & AckSendable): Promise<void> {
 
   const messageResult = await session.receive(subscription);
 
@@ -54,8 +59,8 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
 
   if (null !== ack && undefined !== messageId) {
 
-    const mode = getAckMode(subscription.headers.get('ack'), session.getProtocolVersion());
-    
+    const mode = subscription.headers.get('ack');
+
     if (mode && mode !== 'auto') {
       session[ack].call(session, messageId, undefined, RECEIPT_DEFAULT_TIMEOUT);
     }

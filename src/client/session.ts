@@ -80,6 +80,11 @@ export interface Receivable {
   receive(subscription: Subscription): Promise<MessageResult>;
 };
 
+export interface AckSendable {
+  ack(messageId: string, transactionId: string | undefined, receiptTimeout: number): Promise<SendResult>;
+  nack(messageId: string, transactionId: string | undefined, receiptTimeout: number): Promise<SendResult>;
+};
+
 /**
  * 
  * 
@@ -97,7 +102,7 @@ export interface Receivable {
  * If a receipt is not required then pass {@link RECEIPT_NOT_REQUESTED}
  *
  */
-export class ClientSession implements Receivable {
+export class ClientSession implements Receivable, AckSendable {
 
   private transport: Transport;
 
