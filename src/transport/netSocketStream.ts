@@ -26,6 +26,10 @@ export class NetSocketStream implements TransportStream {
     return this.socket.bytesWritten;
   }
 
+  public getSocket() {
+    return this.socket;
+  }
+
   public [Symbol.asyncIterator](): AsyncIterator<Chunk> {
     return this.socket[Symbol.asyncIterator]();
   }

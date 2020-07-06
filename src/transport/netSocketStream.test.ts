@@ -1,8 +1,8 @@
 import { createServer, Socket } from 'net';
 import * as net from 'net';
 import { encodeUtf8String, decodeString } from '../stream/chunk';
-import { TransportStream } from '../transport';
-import { NetSocketStream } from './netSocketStream';
+import { createSignal } from '../concurrency';
+import { NetSocketStream, netConnect } from './netSocketStream';
 
 let serverClientSocket: Promise<Socket> | undefined;
 
@@ -31,6 +31,24 @@ const prepareServer = () => {
     serverListeningSocket.once('connection', resolve);
   });
 };
+
+function getConnectOptions(): {port: number, host: string} {
+
+  const serverAddress = serverListeningSocket.address();
+
+  if (null === serverAddress) {
+    throw new Error('server not listening');
+  }
+
+  if (typeof serverAddress === 'string') {
+    throw new Error('invalid server address');
+  }
+
+  return {
+    port: serverAddress.port,
+    host: '127.0.0.1'
+  };
+}
 
 function connect(): Promise<[NetSocketStream, NetSocketStream]> {
 
@@ -98,6 +116,8 @@ test('data transfer', async () => {
 
   const clientWriteError = await client.write(encodeUtf8String('hello server'));
 
+  await client.writeEnd();
+
   expect(clientWriteError).toBeUndefined();
 
   const clientReadIterator = client[Symbol.asyncIterator]();
@@ -126,4 +146,49 @@ test('data transfer', async () => {
 
   expect(serverSecondReadResult.done).toBe(true);
   expect(serverSecondReadResult.value).toBeUndefined();
+});
+
+test('write error', async () => {
+
+  const [client, server] = await connect();
+
+  if (!serverClientSocket) {
+    expect(serverClientSocket).toBeDefined();
+    return;
+  }
+
+  const [closed, closedSignal] = createSignal<void>();
+
+  client.getSocket().on('close', () => {
+    closedSignal();
+  });
+
+  server.close();
+
+  await closed;
+
+  const clientWriteError = await client.write(encodeUtf8String('hello server'));
+
+  expect(clientWriteError).toBeDefined();
+});
+
+test('netConnect', async () => {
+  
+  const serverAddress = serverListeningSocket.address();
+
+  if (!serverAddress) {
+    expect(serverAddress).toBeDefined();
+    return;
+  }
+
+  const connectResult = await netConnect(getConnectOptions());
+
+  if (connectResult.error) {
+    expect(connectResult.error).toBeUndefined();
+    return;
+  }
+
+  const secondConnectResult = await netConnect({...getConnectOptions(), port: 0});
+
+  expect(secondConnectResult.error).toBeDefined();
 });
