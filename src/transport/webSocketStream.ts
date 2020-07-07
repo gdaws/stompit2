@@ -116,7 +116,7 @@ export class WebSocketStream implements TransportStream {
     }
   }
 
-  public async write(chunk: Chunk) {
+  public async write(chunk: Chunk): Promise<Error | undefined> {
 
     if (this.socket.readyState === WebSocket.CLOSED) {
       return new Error('socket is closed');
@@ -138,7 +138,7 @@ export class WebSocketStream implements TransportStream {
     this.bytesWritten += chunk.byteLength;
   }
 
-  public async writeEnd() {
+  public async writeEnd(): Promise<Error | undefined> {
 
     this.socketOutputQueue.terminate();
 
