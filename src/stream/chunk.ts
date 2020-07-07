@@ -26,26 +26,6 @@ export function concatPair(first: Chunk, second: Chunk): Chunk {
   return result;
 }
 
-export function concat(...chunks: Chunk[]): Chunk {
-
-  let length = 0;
-
-  for (const chunk of chunks) {
-    length += chunk.length;
-  }
-
-  const result = new Uint8Array(length);
-
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
-}
-
 export async function* streamFromString(value: string): ChunkStream {
   const encoder = new TextEncoder();
   yield encoder.encode(value);
