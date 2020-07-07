@@ -32,14 +32,8 @@ export function createQueue<T>(): Queue<T> {
     }
 
     while (consumers.length > 0) {
-      const consumer = consumers.shift();
-      if (consumer) {
-        const [resolve] = consumer;
-        resolve({value, done: false});
-      }
-      else {
-        throw new Error('Logic error: shift on a non-empty Array<ConsumerController<T>> returned undefined');
-      }
+      const [resolve] = consumers.shift() as ConsumerController<T>;
+      resolve({value, done: false});
     }
 
     return true;

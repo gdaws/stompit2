@@ -39,6 +39,21 @@ test('push bound', async () => {
   await finishPulls;
 });
 
+test('call consumers on terminate', async () => {
+
+  const [producer, consumer] = createQueue<number>();
+
+  const pullIterator = consumer[Symbol.asyncIterator]();
+
+  const pull = pullIterator.next();
+
+  producer.terminate();
+
+  const pullResult = await pull;
+
+  expect(pullResult.done).toBe(true);
+});
+
 test('drain', async () => {
 
   const [producer, consumer] = createQueue<number>();
@@ -67,3 +82,50 @@ test('drain', async () => {
   await finishPushes;
 });
 
+test('drain on terminate', async () => {
+
+  const [producer, consumer] = createQueue<number>();
+
+  const drain = producer.drained();
+
+  producer.push(1);
+  producer.terminate();
+
+  await drain;
+});
+
+test('raise', async () => {
+
+  const [producer, consumer] = createQueue<number>();
+
+  const pullIterator = consumer[Symbol.asyncIterator]();
+  const pull = pullIterator.next();
+
+  producer.raise(new Error('test'));
+
+  try {
+    await pull;
+    expect(true).toBe(false);
+  }
+  catch (e) {
+    expect(e.message).toBe('test');
+  }
+});
+
+test('consume after raise', async () => {
+
+  const [producer, consumer] = createQueue<number>();
+
+  producer.raise(new Error('test'));
+
+  const pullIterator = consumer[Symbol.asyncIterator]();
+  const pull = pullIterator.next();
+
+  try {
+    await pull;
+    expect(true).toBe(false);
+  }
+  catch (e) {
+    expect(e.message).toBe('test');
+  }
+});
