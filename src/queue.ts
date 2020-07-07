@@ -69,11 +69,6 @@ export function createQueue<T>(): Queue<T> {
         resolve({value: undefined, done: true});
       }
     }
-
-    if (drainEvent) {
-      drainEvent[1]();
-      drainEvent = undefined;
-    }
   };
 
   const raise = (error: Error) => {
