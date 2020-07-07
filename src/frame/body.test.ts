@@ -6,7 +6,9 @@ import {
   readString,
   writeJson,
   readJson,
-  createEmitEndDecorator
+  createEmitEndDecorator,
+  writeError,
+  writeBuffer
 } from './body';
 
 import { FrameBody, FrameBodyChunk } from './protocol';
@@ -30,19 +32,27 @@ async function read(body: FrameBody): Promise<FrameBodyChunk> {
   return success(result);
 }
 
-test('putEmptyBody', async () => {
+test('writeEmptyBody', async () => {
   const body = writeEmptyBody();
   const status = await body.next();
   expect(status.done).toBe(true);
 });
 
-describe('getEmptyBody', () => {
+describe('readEmptyBody', () => {
 
   test('empty body', async () => {
     const result = await readEmptyBody(writeEmptyBody());
     expect(result.error).toBeUndefined();
   });
   
+  test('error', async () => {
+
+    const result = await readEmptyBody(writeError(new Error('fail')));
+
+    expect(result.error).toBeDefined();
+    expect(result.error?.message).toBe('fail');
+  });
+
   test('non-empty body', async () => {
 
     const createNonEmptyBody = async function *() {
@@ -54,6 +64,33 @@ describe('getEmptyBody', () => {
     expect(result.error).toBeDefined();
     expect(result.error?.message).toBe('expected empty body');
   });
+});
+
+test('writeError', async () => {
+
+  const writeIterator = writeError(new Error('test'));
+
+  const writeResult = await writeIterator.next();
+
+  const value = writeResult.value;
+
+  expect(value.error).toBeDefined();
+});
+
+test('writeBuffer', async () => {
+
+  const writeIterator = writeBuffer(Buffer.from('A'));
+
+  const writeResult = await writeIterator.next();
+
+  const value = writeResult.value;
+
+  expect(value.error).toBeUndefined();
+
+  const buffer = value.value;
+
+  expect(buffer.byteLength).toBe(1);
+  expect(buffer[0]).toBe(65);
 });
 
 test('writeString', async () => {
@@ -90,6 +127,20 @@ test('readString', async () => {
   expect(result.value).toBe('hello');
 });
 
+test('readString error', async () => {
+
+  const result = await readString(writeError(new Error('fail')));
+
+  expect(result.error).toBeDefined();
+});
+
+test('readString unsupported encoding', async () => {
+
+  const result = await readString(writeString('hello'), 'unsupported' as any);
+
+  expect(result.error).toBeDefined();
+});
+
 test('readJson', async () => {
 
   const result = await readJson(writeString(`{"a": 1, "b": "hello", "c": [1, 2]}`));
@@ -103,6 +154,16 @@ test('readJson', async () => {
   expect(result.value.a).toBe(1);
   expect(result.value.b).toBe('hello');
   expect(Array.isArray(result.value.c)).toBe(true);
+});
+
+test('readJson read error', async () => {
+  const result = await readJson(writeError(new Error('fail')));
+  expect(result.error).toBeDefined();
+});
+
+test('readJson decode error', async () => {
+  const result = await readJson(writeString(`{{{`));
+  expect(result.error).toBeDefined();
 });
 
 test('writeJson', async () => {
@@ -129,13 +190,25 @@ test('writeJson', async () => {
   expect(actual.b).toBe(expected.b);
 });
 
+test('writeJson error', async () => {
+
+  const writeIterator = writeJson(BigInt(1));
+
+  const writeResult = await writeIterator.next();
+
+  const value = writeResult.value;
+
+  expect(value.error).toBeDefined();
+});
+
 test('createEmitEndDecorator', async () => {
 
   const [signal, emit] = createSignal<Error | void>();
 
-  const body = createEmitEndDecorator(writeEmptyBody(), emit);
+  const body = createEmitEndDecorator(writeString('hello'), emit);
 
-  await body.next();
+  for await (const chunk of body) {
+  }
 
   const result = await signal;
 
@@ -143,4 +216,18 @@ test('createEmitEndDecorator', async () => {
 
   expect(result).toBeUndefined();
   expect(status.done).toBe(true);
+});
+
+test('createEmitEndDecorator read error', async () => {
+
+  const [signal, emit] = createSignal<Error | void>();
+
+  const body = createEmitEndDecorator(writeError(new Error('fail')), emit);
+
+  for await (const chunk of body) {
+  }
+
+  const error = await signal;
+
+  expect(error).toBeDefined();
 });

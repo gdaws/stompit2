@@ -68,7 +68,14 @@ export async function* writeString(value: string): FrameBody {
  */
 export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-8'): Promise<Result<string>> {
 
-  const decoder = new TextDecoder(encoding);
+  let decoder;
+
+  try {
+    decoder = new TextDecoder(encoding);
+  }
+  catch (error) {
+    return fail(error);
+  }
 
   let result = '';
 
