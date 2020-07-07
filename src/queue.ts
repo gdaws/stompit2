@@ -88,21 +88,16 @@ export function createQueue<T>(): Queue<T> {
 
     if (queue.length > 0) {
 
-      if (drainEvent && queue.length === 1) {
+      const value = queue.shift() as T;
+
+      resolve({value, done: false});
+
+      if (drainEvent && queue.length === 0) {
         drainEvent[1]();
         drainEvent = undefined;
       }
 
-      const value = queue.shift();
-
-      if (value) {
-        resolve({value, done: false});
-        return;
-      }
-      else {
-        reject(new Error('non-empty queue shift returned undefined'));
-        return;
-      }
+      return;
     }
 
     if (thrown) {
