@@ -82,11 +82,6 @@ export function createQueue<T>(): Queue<T> {
         reject(error);
       }
     }
-
-    if (drainEvent) {
-      drainEvent[1]();
-      drainEvent = undefined;
-    }
   };
 
   const consume = () => new Promise<IteratorResult<T>>((resolve, reject) => {
