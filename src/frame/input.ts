@@ -136,7 +136,8 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
 
     if (line.error) {
       yield fail(line.error);
-      continue;
+      /* istanbul ignore next */ 
+      return;
     }
 
     if (0 === line.value.length) {
@@ -149,7 +150,8 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
 
     if (-1 === separator) {
       yield fail(new Error('header parse error ' + lineString));
-      continue;
+      /* istanbul ignore next */ 
+      return;
     }
 
     const name = decodeValue(lineString.substring(0, separator), params);
@@ -157,7 +159,8 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
 
     if (name.error || value.error) {
       yield fail(new Error('header value decode error'));
-      continue;
+      /* istanbul ignore next */
+      return;
     }
 
     yield success([name.value, value.value]);
@@ -170,6 +173,7 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
   if (contentLength > params.maxBodyLength) {
     yield fail(new Error('frame body too large'));
+    /* istanbul ignore next */ 
     return;
   }
 
@@ -181,6 +185,7 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
     if (chunk.error) {
       yield fail(chunk.error);
+      /* istanbul ignore next */ 
       return;
     }
 
@@ -193,11 +198,13 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
   if (end.error) {
     yield fail(end.error);
+    /* istanbul ignore next */ 
     return;
   }
 
   if (0x0 !== end.value[0]) {
     yield fail(new Error('expected null byte'));
+    /* istanbul ignore next */ 
     return;
   }
 
@@ -214,6 +221,7 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 
     if (chunk.error) {
       yield fail(chunk.error);
+      /* istanbul ignore next */ 
       return;
     }
 
@@ -223,11 +231,13 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 
     if (totalSize > params.maxBodyLength) {
       yield fail(new Error('frame body too large'));
+      /* istanbul ignore next */ 
       return;
     }
 
     if (ended) {
       yield success(chunk.value.slice(0, chunk.value.length - 1));
+      /* istanbul ignore next */ 
       return;
     }
     else {
@@ -248,6 +258,7 @@ function decodeEscapeSequence(escapeSequence: string) {
     case '\\\\':
       return '\\';
     default:
+      /* istanbul ignore next */ 
       return escapeSequence;
   }
 }

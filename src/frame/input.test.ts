@@ -1,4 +1,3 @@
-import { Readable } from 'stream';
 import { TextEncoder } from 'util';
 import { Reader } from '../stream/reader';
 import { readFrame, ReadParameters } from './input';
@@ -163,6 +162,91 @@ describe('readFrame', () => {
     expect(body).toBe('hello');
   });
 
+  test('fixed size body error', async () => {
+    
+    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.'), someReadParams);
+
+    if (readFrameResult.error) {
+      expect(readFrameResult.error).toBeUndefined();
+      return;
+    }
+
+    const frame = readFrameResult.value;
+
+    const bodyIterator = frame.body;
+    
+    const bodyResult = (await bodyIterator.next()).value;
+    
+    if (!bodyResult) {
+      expect(bodyResult).toBeDefined();
+      return;
+    }
+
+    expect(bodyResult.error).toBeDefined();
+  });
+
+  test('dynamic size body read error', async () => {
+
+    const readFrameResult = await readFrame(reader('SEND\n\n...'), someReadParams);
+
+    if (readFrameResult.error) {
+      expect(readFrameResult.error).toBeUndefined();
+      return;
+    }
+
+    const frame = readFrameResult.value;
+
+    const bodyIterator = frame.body;
+    
+    const first = (await bodyIterator.next()).value;
+
+    expect(first.error).toBeDefined();
+  });
+
+  test('fixed size body error on NULL byte', async () => {
+
+    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.....'), someReadParams);
+
+    if (readFrameResult.error) {
+      expect(readFrameResult.error).toBeUndefined();
+      return;
+    }
+
+    const frame = readFrameResult.value;
+
+    const bodyIterator = frame.body;
+    
+    const first = (await bodyIterator.next()).value;
+
+    expect(first.error).toBeUndefined();
+
+    const second = (await bodyIterator.next()).value;
+
+    expect(second.error).toBeDefined();
+  });
+
+  test('fixed size body error no NULL byte', async () => {
+
+    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.....A'), someReadParams);
+
+    if (readFrameResult.error) {
+      expect(readFrameResult.error).toBeUndefined();
+      return;
+    }
+
+    const frame = readFrameResult.value;
+
+    const bodyIterator = frame.body;
+    
+    const first = (await bodyIterator.next()).value;
+
+    expect(first.error).toBeUndefined();
+
+    const second = (await bodyIterator.next()).value;
+
+    expect(second.error).toBeDefined();
+  });
+
   test('fixed size body with a null character wihin the body', async () => {
 
     const frame = await parseValid('SEND\ncontent-length:3\n\n\x00\x01\x02\x00');
@@ -239,6 +323,8 @@ describe('readFrame', () => {
     expect(await readToString(thirdFrame.value.body)).toBe('third');
   });
 
+  
+
   test('value decoding in protocol version 1.0', async () => {
 
     const first = await parseValid('SEND\na:b:\\n\\c\n\n\n\x00', {...someReadParams, protocolVersion: STOMP_VERSION_10});
@@ -297,6 +383,19 @@ describe('readFrame', () => {
   test('exceed maxLineLength', async () => {
 
     const readResult = await readFrame(reader('CONNECT\n'), {...someReadParams, maxLineLength: 4});
+
+    expect(readResult.error).toBeDefined();
+
+    if (!readResult.error) {
+      return;
+    }
+
+    expect(readResult.error.message).toBe('maximum line length exceeded');
+  });
+
+  test('exceed maxLineLength on header line', async () => {
+
+    const readResult = await readFrame(reader('CONNECT\naweroaiweurapoweiurawerawuera\n'), {...someReadParams, maxLineLength: 10});
 
     expect(readResult.error).toBeDefined();
 
@@ -441,5 +540,20 @@ describe('readFrame', () => {
     expect(chunk4.done).toBe(true);
     expect(chunk4.value).toBeUndefined();
   });
-});
 
+  test('malformed command line', async () => {
+
+    const readResult = await readFrame(reader('\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+
+    expect(readResult.error).toBeDefined();
+    expect(readResult.error?.message).toBe('malformed frame expected command line');
+  });
+
+  test('malformed header line', async () => {
+
+    const readResult = await readFrame(reader('CONNECT\ninvalidheader\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+
+    expect(readResult.error).toBeDefined();
+    expect(readResult.error?.message).toBe('header parse error invalidheader');
+  });
+});
