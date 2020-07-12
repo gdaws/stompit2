@@ -72,8 +72,6 @@
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_test_broker_rabbitmq_client_.html#connectheaders" class="tsd-kind-icon">connect<wbr>Headers</a></li>
-								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_test_broker_rabbitmq_client_.html#containername" class="tsd-kind-icon">container<wbr>Name</a></li>
-								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_test_broker_rabbitmq_client_.html#inspectcontainer" class="tsd-kind-icon">inspect<wbr>Container</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_test_broker_rabbitmq_client_.html#stompport" class="tsd-kind-icon">stomp<wbr>Port</a></li>
 							</ul>
 						</section>
@@ -94,7 +92,7 @@
 					<div class="tsd-signature tsd-kind-icon">connect<wbr>Headers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/2b9eb1d/test/broker/rabbitmq/client.js#L6">test/broker/rabbitmq/client.js:6</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/e11a5c3/test/broker/rabbitmq/client.js#L4">test/broker/rabbitmq/client.js:4</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -113,32 +111,12 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
-					<a name="containername" class="tsd-anchor"></a>
-					<h3>container<wbr>Name</h3>
-					<div class="tsd-signature tsd-kind-icon">container<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/2b9eb1d/test/broker/rabbitmq/client.js#L4">test/broker/rabbitmq/client.js:4</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
-					<a name="inspectcontainer" class="tsd-anchor"></a>
-					<h3>inspect<wbr>Container</h3>
-					<div class="tsd-signature tsd-kind-icon">inspect<wbr>Container<span class="tsd-signature-symbol">:</span> <a href="_test_run_utils_.html#inspectcontainer" class="tsd-signature-type">inspectContainer</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/2b9eb1d/test/broker/rabbitmq/client.js#L1">test/broker/rabbitmq/client.js:1</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
 					<a name="stompport" class="tsd-anchor"></a>
 					<h3>stomp<wbr>Port</h3>
 					<div class="tsd-signature tsd-kind-icon">stomp<wbr>Port<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/2b9eb1d/test/broker/rabbitmq/client.js#L5">test/broker/rabbitmq/client.js:5</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/e11a5c3/test/broker/rabbitmq/client.js#L3">test/broker/rabbitmq/client.js:3</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -149,16 +127,38 @@
 					<a name="getconnectionconfig" class="tsd-anchor"></a>
 					<h3>get<wbr>Connection<wbr>Config</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Connection<wbr>Config<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>connectHeaders<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">; </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Connection<wbr>Config<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>connectHeaders<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">; </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/2b9eb1d/test/broker/rabbitmq/client.js#L9">test/broker/rabbitmq/client.js:9</a></li>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/e11a5c3/test/broker/rabbitmq/client.js#L7">test/broker/rabbitmq/client.js:7</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>connectHeaders<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">; </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span>connectHeaders<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">; </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></h4>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter">
+									<h5>connect<wbr>Headers<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>login<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>passcode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+									</ul>
+								</li>
+								<li class="tsd-parameter">
+									<h5>host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li class="tsd-parameter">
+									<h5>port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
 						</li>
 					</ul>
 				</section>
@@ -179,12 +179,6 @@
 				<ul class="before-current">
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
 						<a href="_test_broker_rabbitmq_client_.html#connectheaders" class="tsd-kind-icon">connect<wbr>Headers</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="_test_broker_rabbitmq_client_.html#containername" class="tsd-kind-icon">container<wbr>Name</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="_test_broker_rabbitmq_client_.html#inspectcontainer" class="tsd-kind-icon">inspect<wbr>Container</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
 						<a href="_test_broker_rabbitmq_client_.html#stompport" class="tsd-kind-icon">stomp<wbr>Port</a>
