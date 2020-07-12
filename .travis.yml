@@ -15,5 +15,6 @@ jobs:
       before_script:
         - npm run rabbitmq build
         - npm run rabbitmq start
+        - bash test/broker/rabbitmq/wait_until_listening.sh
       script:
         - BROKER=rabbitmq npx ts-node test/client/speedtest.ts
