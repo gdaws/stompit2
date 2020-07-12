@@ -1,6 +1,6 @@
 import { session, logger } from './lib/app_utils';
 import { FrameHeaders } from '../../src/frame/header';
-import { readString, writeString, writeBuffer } from '../../src/frame/body';
+import { writeBuffer } from '../../src/frame/body';
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -91,7 +91,7 @@ async function speedtest() {
 
   running = false;
 
-  await Promise.all([producer, consumer]);
+  const [producerError, consumerError] = await Promise.all([producer, consumer]);
 
   const end = process.hrtime.bigint();
 
@@ -99,6 +99,19 @@ async function speedtest() {
 
   log(`Producer message rate: ${Math.round(sent / elapsed * 1000)}/s`);
   log(`Consumer message rate: ${Math.round(received / elapsed * 1000)}/s`);
+
+  if (producerError || consumerError) {
+
+    if (producerError) {
+      log('Producer session failed to complete');
+    }
+
+    if (consumerError) {
+      log('Consumer session failed to complete');
+    }
+
+    process.exit(1);
+  }
 }
 
 speedtest();

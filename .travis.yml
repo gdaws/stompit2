@@ -9,3 +9,11 @@ script:
   - npm test
 after_success:
   - codecov
+jobs:
+  include:
+    - name: RabbitMQ speed test
+      before_script:
+        - npm run rabbitmq build
+        - npm run rabbitmq start
+      script:
+        - BROKER=rabbitmq npx ts-node test/client/speedtest.ts
