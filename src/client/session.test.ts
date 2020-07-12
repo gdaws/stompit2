@@ -1,4 +1,5 @@
 import { Result, success, fail } from '../result';
+import { createQueue, Queue } from '../queue';
 import { Frame, ProtocolVersion, STOMP_VERSION_12 } from '../frame/protocol';
 import { FrameHeaders, HeaderLineOptional } from '../frame/header';
 import { writeEmptyBody, writeString, readString } from '../frame/body';
@@ -28,17 +29,24 @@ class MockServer implements Transport {
 
   private receiptTimeout: number;
 
-  private resultQueue: Result<Frame>[];
-  private consumerQueue: ((result: Result<Frame>) => void)[];
+  public resultQueue: Queue<Result<Frame>>;;
 
   private writeFrameResult: Promise<Error | undefined>;
 
   public calls: [keyof MockServer, any[]][];
 
   public constructor(outputFrames: Frame[], receiptTimeout: number) {
+
     this.receiptTimeout = receiptTimeout;
-    this.resultQueue = outputFrames.map(frame => success(frame));
-    this.consumerQueue = [];
+
+    this.resultQueue = createQueue<Result<Frame>>();
+    
+    for (const frame of outputFrames) {
+      this.resultQueue[0].push(success(frame));
+    }
+
+    outputFrames.map(frame => success(frame));
+
     this.writeFrameResult = Promise.resolve(undefined);;
     this.calls = [];
   }
@@ -48,34 +56,23 @@ class MockServer implements Transport {
     return this.receiptTimeout;
   }
 
-  public readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
+  public async readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
     
     this.calls.push(['readFrame', [...arguments]]);
 
-    return new Promise((resolve) => {
+    const iterator = this.resultQueue[1][Symbol.asyncIterator]();
 
-      if (this.resultQueue.length > 0) {
-        resolve(this.resultQueue.shift());
-        return;
-      }
+    const iterResult = await iterator.next();
 
-      this.consumerQueue.push(resolve);
-    });
+    if (iterResult.done) {
+      return fail(new Error('input stream terminated'));
+    }
+
+    return iterResult.value;
   }
 
-  push(result: Result<Frame>) {
-
-    this.resultQueue.push(result);
-
-    while(this.consumerQueue.length > 0 && this.resultQueue.length > 0) {
-
-      const head = this.resultQueue.shift();
-      const consumer = this.consumerQueue.shift();
-
-      if (consumer && head) {
-        consumer(head);
-      }
-    }
+  public push(result: Result<Frame>) {
+    this.resultQueue[0].push(result);
   }
 
   public setWriteFrameResult(result: Promise<Error | undefined>) {
@@ -130,6 +127,25 @@ test('send', async () => {
   }
 
   expect(body.value).toBe('hello');
+});
+
+test('send after shutdown', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  session.shutdown();
+
+  const originalFrame = {
+    command: 'SEND',
+    headers: new FrameHeaders([['destination', '/queue/test']]),
+    body: writeString('hello')
+  };
+
+  const sendError = await session.send(originalFrame);
+
+  expect(sendError).toBeDefined();
+  expect(sendError?.message).toBe('session disconnected');
 });
 
 test('missing destination header', async () => {
@@ -287,6 +303,18 @@ test('begin', async () => {
   expect(transaction.id).toBe(frame.headers.get('transaction'));
 });
 
+test('begin error', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+
+  const result = await session.begin(RECEIPT_DEFAULT_TIMEOUT);
+
+  expect(result.error).toBeDefined();
+});
+
 test('commit', async () => {
 
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
@@ -306,6 +334,20 @@ test('commit', async () => {
   expect(frame.headers.get('transaction')).toBe(transaction);
 });
 
+test('commit error', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+
+  const transaction = 'fake-transaction';
+
+  const error = await session.commit(transaction, RECEIPT_DEFAULT_TIMEOUT);
+
+  expect(error).toBeDefined();
+});
+
 test('abort', async () => {
 
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
@@ -323,6 +365,21 @@ test('abort', async () => {
 
   expect(frame.command).toBe('ABORT');
   expect(frame.headers.get('transaction')).toBe(transaction);
+});
+
+
+test('abort error', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+
+  const transaction = 'fake-transaction';
+
+  const error = await session.abort(transaction, RECEIPT_DEFAULT_TIMEOUT);
+
+  expect(error).toBeDefined();
 });
 
 test('subscribe', async () => {
@@ -354,6 +411,18 @@ test('subscribe', async () => {
   }
 });
 
+test('subscribe error', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+
+  const result = await session.subscribe('/queue/a');
+
+  expect(result.error).toBeDefined();
+});
+
 test('unsubscribe', async () => {
 
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
@@ -371,6 +440,20 @@ test('unsubscribe', async () => {
 
   expect(frame.command).toBe('UNSUBSCRIBE');
   expect(frame.headers.get('id')).toBe(subscription.id);
+});
+
+test('unsubscribe error', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+
+  const subscription = {id: 'fake-subscription', headers: new FrameHeaders([])};
+
+  const error = await session.unsubscribe(subscription, RECEIPT_DEFAULT_TIMEOUT);
+
+  expect(error).toBeDefined();
 });
 
 test('unsubscribe cancels receive', async () => {
@@ -498,6 +581,14 @@ test('cancelReceive', async () => {
   }
 
   expect(result.cancelled).toBe(true);
+});
+
+test('cancelReceive on unknown operation', async () => {
+
+  const server = new MockServer([], RECEIPT_NOT_REQUESTED);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  session.cancelReceive({id: 'unknown', headers: new FrameHeaders([])});
 });
 
 test('receive reset', async () => {
@@ -729,6 +820,12 @@ test('shutdown', async () => {
   expect(session.isDisconnected()).toBe(true);
 
   expect(server.calls[0][0]).toBe('close');
+
+  const numCallsAfterFirstShutdown = server.calls.length;
+
+  session.shutdown();
+
+  expect(server.calls.length).toBe(numCallsAfterFirstShutdown);
 });
 
 test('shutdown cancels receive', (done) => {
@@ -792,12 +889,17 @@ test('receive unhandled message', async () => {
     return;
   }
 
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   const subscription = subscribeResult.value;
 
   server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
-
+  
   // call receive for another subscription to get the receive loop running
-  session.receive({id: '2', headers: new FrameHeaders([])});
+  session.receive({id: subscription.id + '_different', headers: new FrameHeaders([])});
+
+  // FIXME find a more reliable way to synchronise
+  await sleep(1);
 
   const receiveResult = await session.receive({id: subscription.id, headers: new FrameHeaders([])});
 
