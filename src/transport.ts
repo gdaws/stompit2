@@ -90,7 +90,7 @@ export const limitDefaults: TransportLimits = {
   operationTimeout: 3000,
   desiredReadRate: 3000,
   desiredWriteRate: 0,
-  delayTolerance: 400,
+  delayTolerance: 3000,
   readLimits: {
     maxHeaderLines: 128,
     maxLineLength: 8000,
