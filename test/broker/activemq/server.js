@@ -6,7 +6,7 @@ const {
   main
 } = require('../../run_utils');
 
-const { 
+const {
   imageName, 
   containerName,
   buildPath,

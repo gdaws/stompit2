@@ -1,4 +1,4 @@
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 
 function run(command, args) {
 
@@ -41,11 +41,76 @@ function inspectContainer(name) {
 }
 
 function removeContainer(name) {
-  try { run('docker', ['container', 'rm', '-f', name]); } catch(error) {}
+  try { run('docker', ['container', 'rm', '-f', name]); } catch (error) {}
 }
 
 function stopContainer(name) {
   run('docker', ['container', 'stop', name]);
+}
+
+function waitContainerOutput(containerName, pattern, timeout) {
+
+  return new Promise((resolve, reject) => {
+
+    const logViewerProcess = spawn('docker', ['logs', '--follow', containerName], {shell: true});
+
+    let output = '';
+    let finished = false;
+    let timer;
+  
+    const finish = (value) => {
+
+      if (finished) {
+        return;
+      }
+
+      if (null !== timer) {
+        clearTimeout(timer);
+      }
+
+      if (null === logViewerProcess.exitCode) {
+        logViewerProcess.kill('SIGINT');
+      }
+
+      finished = true;
+
+      if (value instanceof Error) {
+        reject(value)
+      }
+      else {
+        resolve(value);
+      }
+    };
+
+    if (timeout > 0 && timeout < Infinity) {
+      timer = setTimeout(() => finish(new Error('timed out waiting for output')), timeout);
+    }
+
+    const matchOutput = () => {
+      
+      const value = output.match(pattern);
+
+      if (null === value) {
+        return;
+      }
+
+      finish(value);
+    };
+
+    logViewerProcess.stdout.on('data', (chunk) => {
+      if (chunk instanceof Buffer) {
+        output = output + chunk.toString('utf-8');
+      }
+      else {
+        output = output + chunk;
+      }
+      matchOutput();
+    });
+
+    logViewerProcess.on('exit', () => {
+      finish(new Error('log viewer process exited with code ' + logViewerProcess.exitCode));
+    });
+  });
 }
 
 function main(availableCommands) {
@@ -76,5 +141,6 @@ module.exports = {
   inspectContainer,
   stopContainer,
   removeContainer,
+  waitContainerOutput,
   main
 };

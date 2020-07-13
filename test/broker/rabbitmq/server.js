@@ -3,6 +3,7 @@ const {
   removeContainer,
   stopContainer, 
   inspectContainer,
+  waitContainerOutput,
   main
 } = require('../../run_utils');
 
@@ -31,7 +32,7 @@ const cleanup = () => {
   catch(error) {}
 };
 
-const start = () => {
+const start = async () => {
 
   const container = inspectContainer(containerName);
       
@@ -57,6 +58,8 @@ const start = () => {
     '-d',
     imageName
   ]);
+
+  await waitContainerOutput(containerName, /started STOMP TCP listener/, 30000);
 };
 
 const stop = () => stopContainer(containerName);
