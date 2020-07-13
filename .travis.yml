@@ -18,3 +18,9 @@ jobs:
         - npm run rabbitmq start
       script:
         - BROKER=rabbitmq npx ts-node test/client/speedtest.ts
+    - name: ActiveMQ speed test
+      before_script:
+        - npm run activemq build
+        - npm run activemq start
+      script:
+        - BROKER=activemq npx ts-node test/client/speedtest.ts
