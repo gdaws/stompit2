@@ -48,9 +48,33 @@ function stopContainer(name) {
   run('docker', ['container', 'stop', name]);
 }
 
+function main(availableCommands) {
+
+  const commandName = process.argv[2] || 'defaultCommand';
+
+  const commandFunction = availableCommands[commandName];
+
+  if (!commandFunction) {
+    process.stderr.write(`Unknown command: ${commandName}\n`);
+    process.exit(1);
+  }
+
+  (async function () {
+    try {
+      await commandFunction();
+      process.exit(0);
+    }
+    catch(error) {
+      process.stderr.write(error.message);
+      process.exit(1);
+    }
+  })();
+}
+
 module.exports = {
   run,
   inspectContainer,
   stopContainer,
-  removeContainer
+  removeContainer,
+  main
 };

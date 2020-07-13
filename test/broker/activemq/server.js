@@ -2,7 +2,8 @@ const {
   run, 
   removeContainer,
   stopContainer, 
-  inspectContainer
+  inspectContainer,
+  main
 } = require('../../run_utils');
 
 const { 
@@ -13,76 +14,62 @@ const {
   connectHeaders
 } = require('./config'); 
 
-const command = process.argv[2] || 'start';
+const build = () => run('docker', ['build', '-t', imageName, buildPath]);
 
-try {
+const cleanup = () => {
 
-  switch (command) {
-    
-    case 'build': {
-      run('docker', ['build', '-t', imageName, buildPath]);
-      break;
-    }
-
-    case 'cleanup': {
-
-      try {
-        run('docker', ['container', 'stop', containerName]);
-        console.log('Stopped container');
-      }
-      catch(error) {}
-      
-      try {
-        run('docker', ['container', 'rm', containerName]);
-        console.log('Removed container');
-      }
-      catch(error) {}
-      
-      break;
-    }
-
-    case 'start': {
-      
-      const container = inspectContainer(containerName);
-      
-      if (container) {
-
-        if(container.State.Running) {
-          console.warn('Restarting server');
-        }
-
-        removeContainer(containerName);
-      }
-
-      run('docker', [
-        'run',
-        `--name "${containerName}"`,
-        '-p 61613:61613',
-        '-p 61614:61614',
-        '-p 8161:8161',
-        '-d',
-        imageName
-      ]);
-
-      break;
-    }
-  
-    case 'stop':
-      stopContainer(containerName);
-      break;
-
-    case 'info': {
-
-      console.log(`Management Url: http://localhost:${webAdminPort}/`);
-
-      console.log(`Username: ${connectHeaders.login}`);
-      console.log(`Password: ${connectHeaders.passcode}`);
-
-      break;
-    }
+  try {
+    run('docker', ['container', 'stop', containerName]);
+    console.log('Stopped container');
   }
-}
-catch(error) {
-  process.stderr.write(error.message);
-  process.exit(1);
-}
+  catch(error) {}
+  
+  try {
+    run('docker', ['container', 'rm', containerName]);
+    console.log('Removed container');
+  }
+  catch(error) {}
+};
+
+const start = () => {
+
+  const container = inspectContainer(containerName);
+      
+  if (container) {
+
+    if(container.State.Running) {
+      console.warn('Restarting server');
+    }
+
+    removeContainer(containerName);
+  }
+
+  run('docker', [
+    'run',
+    `--name "${containerName}"`,
+    '-p 61613:61613',
+    '-p 61614:61614',
+    '-p 8161:8161',
+    '-d',
+    imageName
+  ]);
+};
+
+const stop = () => stopContainer(containerName);
+
+const info = () => {
+
+  console.log(`Management Url: http://localhost:${webAdminPort}/`);
+
+  console.log(`Username: ${connectHeaders.login}`);
+  console.log(`Password: ${connectHeaders.passcode}`);
+};
+
+main({
+  build, 
+  cleanup, 
+  start, 
+  stop, 
+  info,
+  defaultCommand: start
+});
