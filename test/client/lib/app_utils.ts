@@ -26,9 +26,8 @@ export function getConnectionConfig(): Config | undefined {
 }
 
 export function logger(name: string): LogFunction {
-  let count = 1;
   return (...args: any[]) => {
-    console.log(`[${name}: ${count++}] `, ...args);
+    console.log(`[${name}] `, ...args);
   };
 }
 
