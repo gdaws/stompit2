@@ -1,4 +1,4 @@
-import { Result, success, fail } from '../result';
+import { Result, ok, fail, failed } from '../result';
 import { FrameHeaders, HeaderLine } from './header';
 import { Reader } from '../stream/reader';
 import { Chunk, decodeString } from '../stream/chunk';
@@ -66,21 +66,21 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
 
   const commandResult = await readCommand(reader, params);
 
-  if (commandResult.error) {
-    return fail(commandResult.error);
+  if (failed(commandResult)) {
+    return commandResult;
   }
 
   const command = commandResult.value;
 
   const headerLines = [];
 
-  for await (const line of readHeaderLines(reader, params)) {
+  for await (const result of readHeaderLines(reader, params)) {
 
-    if (line.error) {
-      return fail(line.error);
+    if (failed(result)) {
+      return result;
     }
 
-    headerLines.push(line.value);
+    headerLines.push(result.value);
   }
 
   const headers = new FrameHeaders(headerLines);
@@ -98,7 +98,7 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
     body = readDynamicSizeBody(reader, params);
   }
 
-  return success({
+  return ok({
     command,
     headers,
     body
@@ -107,13 +107,15 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
 
 async function readCommand(reader: Reader, params: ReadParameters): Promise<Result<string>> {
 
-  const command = await reader.readLine(params.maxLineLength);
+  const result = await reader.readLine(params.maxLineLength);
 
-  if (command.error) {
-    return fail(command.error);
+  if (failed(result)) {
+    return result;
   }
 
-  if (command.value.length === 0) {
+  const line = result.value;
+
+  if (line.length === 0) {
     // reading EOL trailer from previous frame
     if (params.ignoreLeadingEmptyLines) {
       return await readCommand(reader, params);
@@ -123,7 +125,7 @@ async function readCommand(reader: Reader, params: ReadParameters): Promise<Resu
     }
   }
 
-  return success(decodeString(command.value, HEADER_CHAR_ENCODING));
+  return ok(decodeString(line, HEADER_CHAR_ENCODING));
 }
 
 async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGenerator<Result<HeaderLine>> {
@@ -132,19 +134,21 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
 
   while (count++ <= params.maxHeaderLines) {
 
-    const line = await reader.readLine(params.maxLineLength);
+    const result = await reader.readLine(params.maxLineLength);
 
-    if (line.error) {
-      yield fail(line.error);
+    if (failed(result)) {
+      yield result;
       /* istanbul ignore next */ 
       return;
     }
 
-    if (0 === line.value.length) {
+    const line = result.value;
+
+    if (0 === line.length) {
       return;
     }
   
-    const lineString = decodeString(line.value, HEADER_CHAR_ENCODING);
+    const lineString = decodeString(line, HEADER_CHAR_ENCODING);
 
     const separator = lineString.indexOf(':');
 
@@ -154,16 +158,16 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
       return;
     }
 
-    const name = decodeValue(lineString.substring(0, separator), params);
-    const value = decodeValue(lineString.substring(separator + 1), params);
+    const nameDecodeResult = decodeValue(lineString.substring(0, separator), params);
+    const valueDecodeResult = decodeValue(lineString.substring(separator + 1), params);
 
-    if (name.error || value.error) {
+    if (failed(nameDecodeResult) || failed(valueDecodeResult)) {
       yield fail(new Error('header value decode error'));
       /* istanbul ignore next */
       return;
     }
 
-    yield success([name.value, value.value]);
+    yield ok([nameDecodeResult.value, valueDecodeResult.value]);
   }
 
   yield fail(new Error('maximum header lines exceeded'));
@@ -181,34 +185,38 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
   while (remaining > 0) {
 
-    const chunk = await reader.read(Math.min(remaining, params.maxBodyChunkLength));
+    const result = await reader.read(Math.min(remaining, params.maxBodyChunkLength));
 
-    if (chunk.error) {
-      yield fail(chunk.error);
-      /* istanbul ignore next */ 
+    if (failed(result)) {
+      yield result;
+      /* istanbul ignore next */
       return;
     }
 
-    remaining -= chunk.value.length;
+    const chunk = result.value;
 
-    yield success(chunk.value);
+    remaining -= chunk.length;
+
+    yield ok(chunk);
   }
 
-  const end = await reader.read(1);
+  const endResult = await reader.read(1);
 
-  if (end.error) {
-    yield fail(end.error);
+  if (failed(endResult)) {
+    yield endResult;
     /* istanbul ignore next */ 
     return;
   }
 
-  if (0x0 !== end.value[0]) {
+  const endChunk = endResult.value;
+
+  if (0x0 !== endChunk[0]) {
     yield fail(new Error('expected null byte'));
     /* istanbul ignore next */ 
     return;
   }
 
-  yield success(Buffer.alloc(0));
+  yield ok(Buffer.alloc(0));
 }
 
 async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): AsyncGenerator<Result<Chunk>> {
@@ -217,17 +225,19 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 
   while (true) {
 
-    const chunk = await reader.readUntil(0x0, params.maxBodyChunkLength);
+    const result = await reader.readUntil(0x0, params.maxBodyChunkLength);
 
-    if (chunk.error) {
-      yield fail(chunk.error);
-      /* istanbul ignore next */ 
+    if (failed(result)) {
+      yield result;
+      /* instanbul ignore next */
       return;
     }
 
-    const ended = 0x0 === chunk.value[chunk.value.length - 1];
+    const chunk = result.value;
 
-    totalSize += chunk.value.length + (ended ? -1 : 0);
+    const ended = 0x0 === chunk[chunk.length - 1];
+
+    totalSize += chunk.length + (ended ? -1 : 0);
 
     if (totalSize > params.maxBodyLength) {
       yield fail(new Error('frame body too large'));
@@ -236,12 +246,12 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
     }
 
     if (ended) {
-      yield success(chunk.value.slice(0, chunk.value.length - 1));
+      yield ok(chunk.slice(0, chunk.length - 1));
       /* istanbul ignore next */ 
       return;
     }
     else {
-      yield success(chunk.value);
+      yield ok(chunk);
     }
   }
 }
@@ -267,12 +277,12 @@ function decodeValue(encoded: string, params: ReadParameters): Result<string> {
 
   switch (params.protocolVersion) {
     case STOMP_VERSION_10:
-      return success(encoded);
+      return ok(encoded);
 
     case STOMP_VERSION_11:
-      return success(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
+      return ok(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
 
     case STOMP_VERSION_12:
-      return success(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
+      return ok(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
   }
 }

@@ -1,4 +1,4 @@
-import { Result, success, fail } from '../result';
+import { Result, ok, fail } from '../result';
 import { Chunk, ChunkStream, alloc, concatPair } from './chunk';
 
 enum ReadStatus {
@@ -193,7 +193,7 @@ export class Reader {
 
         this.buffer = this.buffer.slice(result.consume + result.skip);
   
-        return success(runResult);
+        return ok(runResult);
       }
 
       case ReadStatus.Error: {

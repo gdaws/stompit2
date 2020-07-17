@@ -1,4 +1,4 @@
-import { Result, success } from './result';
+import { Result, failed, result, ok } from './result';
 import { Frame, ProtocolVersion, STOMP_VERSION_10, acceptedVersions } from './frame/protocol';
 import { FrameHeaders } from './frame/header';
 import { writeEmptyBody } from './frame/body';
@@ -22,7 +22,7 @@ class MockTransport implements Transport {
 
   readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
 
-    return Promise.resolve(success({
+    return Promise.resolve(ok({
       command: 'CONNECTED',
       headers: FrameHeaders.fromEntries([
         ['version', '1.2']
@@ -46,14 +46,7 @@ test('stompConnect', async () => {
 
   const transport = new MockTransport();
 
-  const stompConnectResult = await stompConnect(Promise.resolve(success(transport)), '/', 'guest', 'password');
-
-  if (stompConnectResult.error) {
-    expect(stompConnectResult.error).toBeUndefined();
-    return;
-  }
-
-  const session = stompConnectResult.value;
+  const session = result(await stompConnect(Promise.resolve(ok(transport)), '/', 'guest', 'password'));
 
   expect(session).toBeInstanceOf(ClientSession);
   expect(session.getProtocolVersion()).toBe('1.2');

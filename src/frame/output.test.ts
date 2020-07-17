@@ -11,7 +11,7 @@ import {
   Frame
 } from './protocol';
 
-import { success } from '../result';
+import { ok } from '../result';
 import { FrameHeaders } from './header';
 import { writeEmptyBody } from './body';
 
@@ -84,8 +84,8 @@ describe('writeFrame', () => {
         ['destination', '/queue/a']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 
@@ -101,8 +101,8 @@ describe('writeFrame', () => {
         ['content-length', '5']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 
@@ -117,8 +117,8 @@ describe('writeFrame', () => {
         ['destination', '/queue/a']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 
@@ -134,8 +134,8 @@ describe('writeFrame', () => {
         ['content-length', '-1']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 
@@ -154,8 +154,8 @@ describe('writeFrame', () => {
         ['content-length', '3']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 
@@ -174,8 +174,8 @@ describe('writeFrame', () => {
         ['content-length', '6']
       ]),
       body: (async function* () {
-        yield success(Buffer.from('hel'));
-        yield success(Buffer.from('lo'));
+        yield ok(Buffer.from('hel'));
+        yield ok(Buffer.from('lo'));
       })()
     };
 

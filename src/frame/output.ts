@@ -1,11 +1,10 @@
-import { Result, success, fail } from '../result';
-import { alloc, allocUnsafe, encodeUtf8String } from '../stream/chunk';
+import { Result, ok, failed, error } from '../result';
+import { allocUnsafe, encodeUtf8String } from '../stream/chunk';
 import { Writer } from '../stream/writer';
 
 import {
   Frame, 
   ProtocolVersion, 
-  HEADER_CHAR_ENCODING, 
   STOMP_VERSION_10, 
   STOMP_VERSION_11, 
   STOMP_VERSION_12 
@@ -67,19 +66,19 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
       }
     }
 
-    const nameEncoded = encodeValue(name, params);
+    const nameEncodedResult = encodeValue(name, params);
     
-    if (nameEncoded.error) {
-      return nameEncoded.error;
+    if (failed(nameEncodedResult)) {
+      return error(nameEncodedResult);
     }
 
-    const valueEncoded = encodeValue(value, params);
+    const valueEncodedResult = encodeValue(value, params);
 
-    if (valueEncoded.error) {
-      return valueEncoded.error;
+    if (failed(valueEncodedResult)) {
+      return error(valueEncodedResult);
     }
 
-    frameHeader = frameHeader + nameEncoded.value + ':' + valueEncoded.value + '\n';
+    frameHeader = frameHeader + nameEncodedResult.value + ':' + valueEncodedResult.value + '\n';
   }
 
   frameHeader = frameHeader + '\n';
@@ -107,21 +106,23 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
 
     let contentLength = 0;
 
-    for await (const chunk of frame.body) {
+    for await (const result of frame.body) {
       
-      if (chunk.error) {
-        return chunk.error;
+      if (failed(result)) {
+        return error(result);
       }
 
-      contentLength += chunk.value.length;
+      const chunk = result.value;
+
+      contentLength += chunk.length;
 
       if (contentLength > expectedContentLength) {
         return new Error('incorrect content-length header');
       }
 
-      buffer.set(chunk.value, written);
+      buffer.set(chunk, written);
 
-      written += chunk.value.length;
+      written += chunk.length;
     }
 
     if (contentLength !== expectedContentLength) {
@@ -133,10 +134,10 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
 
     written += 2;
 
-    const error = await writer.write(buffer.slice(0, written));
+    const writeFrameError = await writer.write(buffer.slice(0, written));
 
-    if (error) {
-      return error;
+    if (writeFrameError) {
+      return writeFrameError;
     }
   }
   else {
@@ -150,13 +151,15 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
       return writeHeaderError;
     }
 
-    for await (const chunk of frame.body) {
+    for await (const result of frame.body) {
 
-      if (chunk.error) {
-        return chunk.error;
+      if (failed(result)) {
+        return error(result);
       }
 
-      const writeChunkError = await writer.write(chunk.value);
+      const chunk = result.value;
+
+      const writeChunkError = await writer.write(chunk);
 
       if (writeChunkError) {
         return writeChunkError;
@@ -202,12 +205,12 @@ function encodeValue(decoded: string, params: WriteParameters): Result<string> {
   switch (params.protocolVersion) {
 
     case STOMP_VERSION_10:
-      return success(decoded);
+      return ok(decoded);
     
     case STOMP_VERSION_11:
-      return success(decoded.replace(/\n|:|\\|/g, encodeEscapeSequence));
+      return ok(decoded.replace(/\n|:|\\|/g, encodeEscapeSequence));
 
     case STOMP_VERSION_12:
-      return success(decoded.replace(/\r|\n|:|\\|/g, encodeEscapeSequence));
+      return ok(decoded.replace(/\r|\n|:|\\|/g, encodeEscapeSequence));
   }
 }

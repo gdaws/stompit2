@@ -1,3 +1,4 @@
+import { failed, result, error } from '../result';
 import { ChunkStream, streamFromString, decodeString } from './chunk';
 import { Reader, ReadResult } from './reader';
 
@@ -14,44 +15,29 @@ function reset(value: string) {
   reader = new Reader(stream);
 }
 
-function expectReadEquals(result: ReadResult, expected: string) {
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(decodeString(result.value)).toBe(expected);
+function expectReadEquals(actual: ReadResult, expected: string) {
+  expect(decodeString(result(actual))).toBe(expected);
 }
 
-function expectReadSubstring(result: ReadResult, minLength: number, expected: string) {
+function expectReadSubstring(actual: ReadResult, minLength: number, expected: string) {
   
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
+  const value = decodeString(result(actual));
 
-  if (!result.value) {
-    expect(result.value).toBeDefined();
-  }
+  expect(value.length).toBeGreaterThanOrEqual(minLength);
+  expect(value.length).toBeLessThanOrEqual(expected.length);
 
-  const actual = decodeString(result.value);
-
-  expect(actual.length).toBeGreaterThanOrEqual(minLength);
-  expect(actual.length).toBeLessThanOrEqual(expected.length);
-
-  expect(actual.indexOf(expected)).toBe(0);
+  expect(value.indexOf(expected)).toBe(0);
 }
 
-function expectReadError(result: ReadResult, message?: string) {
+function expectReadError(actual: ReadResult, message?: string) {
 
-  if (!result.error) {
-    expect(result.error).toBeDefined();
+  if (!failed(actual)) {
+    expect(true).toBe(false);
     return;
   }
 
   if (message) {
-    expect(result.error.message).toBe(message);
+    expect(error(actual).message).toBe(message);
   }
 }
 

@@ -1,4 +1,4 @@
-import { Result, success, fail } from '../result';
+import { Result, ok, fail } from '../result';
 import { Chunk, encodeUtf8String } from '../stream/chunk';
 import { createQueue, Producer } from '../queue';
 
@@ -164,7 +164,7 @@ export function wsConnect(url: string, limits?: Partial<TransportLimits>): Promi
 
       socket.binaryType = 'arraybuffer';
   
-      resolve(success(new StandardTransport(new WebSocketStream(socket), {...limitDefaults, ...(limits || {})})));
+      resolve(ok(new StandardTransport(new WebSocketStream(socket), {...limitDefaults, ...(limits || {})})));
     }
     catch (error) {
       resolve(fail(error));

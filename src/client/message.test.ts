@@ -1,4 +1,4 @@
-import { success, fail } from '../result';
+import { result, ok, fail } from '../result';
 import { FrameHeaders } from '../frame/header';
 import { readString, writeString } from '../frame/body';
 import { Queue, Producer, Consumer, createQueue } from '../queue';
@@ -14,14 +14,7 @@ test('jsonMessage', async () => {
   expect(frame.headers.get('destination')).toBe('/queue/test');
   expect(frame.headers.get('content-type')).toBe('application/json');
 
-  const decodeBodyResult = await readString(frame.body);
-
-  if (decodeBodyResult.error) {
-    expect(decodeBodyResult.error).toBeUndefined();
-    return;
-  }
-
-  const bodyString = decodeBodyResult.value;
+  const bodyString = result(await readString(frame.body));
 
   const content = JSON.parse(bodyString);
 
@@ -87,9 +80,9 @@ test('discardMessages', async () => {
 
   const finishDiscardingMessages = discardMessages('ack', subscription, session);
 
-  session.inputProducer.push(success(message('1')));
-  session.inputProducer.push(success(message('2')));
-  session.inputProducer.push(success(message('3')));
+  session.inputProducer.push(ok(message('1')));
+  session.inputProducer.push(ok(message('2')));
+  session.inputProducer.push(ok(message('3')));
 
   session.inputProducer.push(fail(new Error('session timeout')));
 

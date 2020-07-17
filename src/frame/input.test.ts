@@ -11,7 +11,8 @@ import {
   FrameBody,
 } from './protocol';
 
-import { success } from '../result';
+import { ok, failed, result, error, Result } from '../result';
+import { decodeString } from '../stream/chunk';
 
 function reader(value: string): Reader {
   return new Reader((async function* () {
@@ -26,47 +27,29 @@ function neverResolve(): Promise<void> {
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
 
-  let result = Buffer.alloc(0);
+  let buffer = Buffer.alloc(0);
 
-  for await (const chunk of body) {
+  for await (const result of body) {
 
-    if (chunk.error) {
-      return chunk;
+    if (failed(result)) {
+      return result;
     }
 
-    result = Buffer.concat([result, chunk.value]);
+    buffer = Buffer.concat([buffer, result.value]);
   }
 
-  return success(result);
+  return ok(buffer);
 }
 
 async function readToString(body: FrameBody): Promise<string> {
-
-  const result = await read(body);
-
-  if (result.error) {
-    throw new Error('expected success result from read body');
-  }
-
-  return result.value.toString();
+  return decodeString(result(await read(body)));
 }
 
 async function expectEmptyBody(frame: Frame) {
 
-  const body = await read(frame.body);
+  const body = result(await read(frame.body));
 
-  if(body.error) {
-    return;
-  }
-
-  expect(body.error).toBeUndefined();
-  expect(body.value).toBeDefined();
-
-  if (!body.value) {
-    return;
-  }
-
-  expect(body.value.length).toBe(0);
+  expect(body.length).toBe(0);
 }
 
 const someReadParams: ReadParameters = {
@@ -79,23 +62,7 @@ const someReadParams: ReadParameters = {
 };
 
 async function parseValid(value: string, params: ReadParameters = someReadParams): Promise<Frame> {
-
-  const readResult = await readFrame(reader(value), params);
-
-  if (readResult.error) {
-    expect(readResult.error).toBeUndefined();
-    throw new Error('read error');
-  }
-
-  expect(readResult.value).toBeDefined();
-
-  const frame = readResult.value;
-
-  if (!frame) {
-    throw new Error('expected to parse valid frame');
-  }
-
-  return frame;
+  return result(await readFrame(reader(value), params));
 }
 
 describe('readFrame', () => {
@@ -164,14 +131,7 @@ describe('readFrame', () => {
 
   test('fixed size body error', async () => {
     
-    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.'), someReadParams);
-
-    if (readFrameResult.error) {
-      expect(readFrameResult.error).toBeUndefined();
-      return;
-    }
-
-    const frame = readFrameResult.value;
+    const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.'), someReadParams));
 
     const bodyIterator = frame.body;
     
@@ -187,14 +147,7 @@ describe('readFrame', () => {
 
   test('dynamic size body read error', async () => {
 
-    const readFrameResult = await readFrame(reader('SEND\n\n...'), someReadParams);
-
-    if (readFrameResult.error) {
-      expect(readFrameResult.error).toBeUndefined();
-      return;
-    }
-
-    const frame = readFrameResult.value;
+    const frame = result(await readFrame(reader('SEND\n\n...'), someReadParams));
 
     const bodyIterator = frame.body;
     
@@ -205,14 +158,7 @@ describe('readFrame', () => {
 
   test('fixed size body error on NULL byte', async () => {
 
-    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.....'), someReadParams);
-
-    if (readFrameResult.error) {
-      expect(readFrameResult.error).toBeUndefined();
-      return;
-    }
-
-    const frame = readFrameResult.value;
+    const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.....'), someReadParams));
 
     const bodyIterator = frame.body;
     
@@ -227,14 +173,7 @@ describe('readFrame', () => {
 
   test('fixed size body error no NULL byte', async () => {
 
-    const readFrameResult = await readFrame(reader('SEND\ncontent-length:5\n\n.....A'), someReadParams);
-
-    if (readFrameResult.error) {
-      expect(readFrameResult.error).toBeUndefined();
-      return;
-    }
-
-    const frame = readFrameResult.value;
+    const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.....A'), someReadParams));
 
     const bodyIterator = frame.body;
     
@@ -251,20 +190,7 @@ describe('readFrame', () => {
 
     const frame = await parseValid('SEND\ncontent-length:3\n\n\x00\x01\x02\x00');
 
-    const result = await read(frame.body);
-
-    if (result.error) {
-      expect(result.error).toBeUndefined();
-      return;
-    }
-
-    expect(result.value).toBeDefined();    
-
-    if (!result.value) {
-      return;
-    }
-
-    const buffer = result.value;
+    const buffer = result(await read(frame.body));
 
     expect(buffer.length).toBe(3);
 
@@ -277,53 +203,18 @@ describe('readFrame', () => {
 
     const source = reader('SEND\n\nfirst\x00SEND\n\nsecond\x00\n\nSEND\n\nthird\x00');
 
-    const firstFrame = await readFrame(source, someReadParams);
+    const firstFrame = result(await readFrame(source, someReadParams));
 
-    if (firstFrame.error) {
-      expect(firstFrame.error).toBeUndefined();
-      return;
-    }
+    expect(await readToString(firstFrame.body)).toBe('first');
 
-    expect(firstFrame.value).toBeDefined();
-
-    if (!firstFrame.value) {
-      return;
-    }
-
-    expect(await readToString(firstFrame.value.body)).toBe('first');
-
-    const secondFrame = await readFrame(source, someReadParams);
+    const secondFrame = result(await readFrame(source, someReadParams));
   
-    if (secondFrame.error) {
-      expect(secondFrame.error).toBeUndefined();
-      return;
-    }
-
-    expect(secondFrame.value).toBeDefined();
-
-    if (!secondFrame.value) {
-      return;
-    }
-
-    expect(await readToString(secondFrame.value.body)).toBe('second');
+    expect(await readToString(secondFrame.body)).toBe('second');
     
-    const thirdFrame = await readFrame(source, someReadParams);
+    const thirdFrame = result(await readFrame(source, someReadParams));
   
-    if (thirdFrame.error) {
-      expect(thirdFrame.error).toBeUndefined();
-      return;
-    }
-
-    expect(thirdFrame.value).toBeDefined();
-
-    if (!thirdFrame.value) {
-      return;
-    }
-
-    expect(await readToString(thirdFrame.value.body)).toBe('third');
+    expect(await readToString(thirdFrame.body)).toBe('third');
   });
-
-  
 
   test('value decoding in protocol version 1.0', async () => {
 
@@ -361,20 +252,7 @@ describe('readFrame', () => {
       await neverResolve();
     })());
 
-    const readResult = await readFrame(reader, someReadParams);
-
-    if (readResult.error) {
-      expect(readResult.error).toBeUndefined();
-      return;
-    }
-
-    expect(readResult.value).toBeDefined();
-
-    if (!readResult.value) {
-      return;
-    }
-
-    const frame = readResult.value;
+    const frame = result(await readFrame(reader, someReadParams));
 
     expect(frame.command).toBe('SEND');
     expect(frame.headers.get('content-type')).toBe('text\/something');
@@ -382,41 +260,23 @@ describe('readFrame', () => {
 
   test('exceed maxLineLength', async () => {
 
-    const readResult = await readFrame(reader('CONNECT\n'), {...someReadParams, maxLineLength: 4});
+    const result = await readFrame(reader('CONNECT\n'), {...someReadParams, maxLineLength: 4});
 
-    expect(readResult.error).toBeDefined();
-
-    if (!readResult.error) {
-      return;
-    }
-
-    expect(readResult.error.message).toBe('maximum line length exceeded');
+    expect(failed(result) && error(result).message).toBe('maximum line length exceeded');
   });
 
   test('exceed maxLineLength on header line', async () => {
 
-    const readResult = await readFrame(reader('CONNECT\naweroaiweurapoweiurawerawuera\n'), {...someReadParams, maxLineLength: 10});
+    const result = await readFrame(reader('CONNECT\naweroaiweurapoweiurawerawuera\n'), {...someReadParams, maxLineLength: 10});
 
-    expect(readResult.error).toBeDefined();
-
-    if (!readResult.error) {
-      return;
-    }
-
-    expect(readResult.error.message).toBe('maximum line length exceeded');
+    expect(failed(result) && error(result).message).toBe('maximum line length exceeded');
   });
 
   test('exceed maxHeaderLines', async () => {
 
-    const readResult = await readFrame(reader('CONNECT\nfoo:a\nfoo:b\nfoo:c\n\n\x00'), {...someReadParams, maxHeaderLines: 2});
+    const result = await readFrame(reader('CONNECT\nfoo:a\nfoo:b\nfoo:c\n\n\x00'), {...someReadParams, maxHeaderLines: 2});
 
-    expect(readResult.error).toBeDefined();
-
-    if (!readResult.error) {
-      return;
-    }
-
-    expect(readResult.error.message).toBe('maximum header lines exceeded');
+    expect(failed(result) && error(result).message).toBe('maximum header lines exceeded');
   });
 
   test('exceed maxBodyLength of a dynamic-size body', async () => {
@@ -425,8 +285,7 @@ describe('readFrame', () => {
 
     const body = await read(frame.body);
 
-    expect(body.error).toBeDefined();
-    expect(body.error?.message).toBe('frame body too large');    
+    expect(failed(body) && error(body).message).toBe('frame body too large');
   });
 
   test('exceed maxBodyLength of a fixed-size body', async () => {
@@ -435,125 +294,98 @@ describe('readFrame', () => {
 
     const body = await read(frame.body);
 
-    expect(body.error).toBeDefined();
-    expect(body.error?.message).toBe('frame body too large');   
+    expect(failed(body) && error(body).message).toBe('frame body too large');
   });
 
   test('maxBodyChunkLength of a dyanmic-size body', async () => {
 
     const frame = await parseValid('SEND\n\nhi\x00', {...someReadParams, maxBodyChunkLength: 1});
 
-    const chunk1 = await frame.body.next();
+    const firstIteration = await frame.body.next();
 
-    expect(chunk1.done).toBe(false);
-    expect(chunk1.value).toBeDefined();
+    expect(firstIteration.done).toBe(false);
+    expect(firstIteration.value).toBeDefined();
 
-    if (!chunk1.value) {
-      return;
-    }
+    const chunk1 = result(firstIteration.value as Result<Uint8Array>);
 
-    expect(chunk1.value.error).toBeUndefined();
-    expect(chunk1.value.value).toBeDefined();
-    expect(chunk1.value.value.length).toBe(1);
-    expect(chunk1.value.value[0]).toBe('h'.charCodeAt(0));
+    expect(chunk1.length).toBe(1);
+    expect(chunk1[0]).toBe('h'.charCodeAt(0));
 
-    const chunk2 = await frame.body.next();
+    const secondIteration = await frame.body.next();
 
-    expect(chunk2.done).toBe(false);
-    expect(chunk2.value).toBeDefined();
+    expect(secondIteration.done).toBe(false);
+    expect(secondIteration.value).toBeDefined();
 
-    if (!chunk2.value) {
-      return;
-    }
+    const chunk2 = result(secondIteration.value as Result<Uint8Array>);
 
-    expect(chunk2.value.error).toBeUndefined();
-    expect(chunk2.value.value).toBeDefined();
-    expect(chunk2.value.value.length).toBe(1);
-    expect(chunk2.value.value[0]).toBe('i'.charCodeAt(0));
+    expect(chunk2.length).toBe(1);
+    expect(chunk2[0]).toBe('i'.charCodeAt(0));
 
-    const chunk3 = await frame.body.next();
+    const thirdIteration =  await frame.body.next();
 
-    expect(chunk3.done).toBe(false);
-    expect(chunk3.value).toBeDefined();
+    expect(thirdIteration.done).toBe(false);
+    expect(thirdIteration.value).toBeDefined();
 
-    if (!chunk3.value) {
-      return;
-    }
+    const chunk3 = result(thirdIteration.value as Result<Uint8Array>);
 
-    expect(chunk3.value.error).toBeUndefined();
-    expect(chunk3.value.value).toBeDefined();
-    expect(chunk3.value.value.length).toBe(0);
+    expect(chunk3.length).toBe(0);
 
-    const chunk4 = await frame.body.next();
+    const fourthIteration = await frame.body.next();
 
-    expect(chunk4.done).toBe(true);
-    expect(chunk4.value).toBeUndefined();
+    expect(fourthIteration.done).toBe(true);
+    expect(fourthIteration.value).toBeUndefined();
   });
   
   test('maxBodyChunkLength of a fixed-size body', async () => {
 
     const frame = await parseValid('SEND\ncontent-length:2\n\nhi\x00', {...someReadParams, maxBodyChunkLength: 1});
 
-    const chunk1 = await frame.body.next();
+    const firstIteration = await frame.body.next();
 
-    expect(chunk1.done).toBe(false);
-    expect(chunk1.value).toBeDefined();
+    expect(firstIteration.done).toBe(false);
+    expect(firstIteration.value).toBeDefined();
 
-    if (!chunk1.value) {
-      return;
-    }
+    const chunk1 = result(firstIteration.value as Result<Uint8Array>);
 
-    expect(chunk1.value.error).toBeUndefined();
-    expect(chunk1.value.value).toBeDefined();
-    expect(chunk1.value.value.length).toBe(1);
-    expect(chunk1.value.value[0]).toBe('h'.charCodeAt(0));
+    expect(chunk1.length).toBe(1);
+    expect(chunk1[0]).toBe('h'.charCodeAt(0));
 
-    const chunk2 = await frame.body.next();
+    const secondIteration = await frame.body.next();
 
-    expect(chunk2.done).toBe(false);
-    expect(chunk2.value).toBeDefined();
+    expect(secondIteration.done).toBe(false);
+    expect(secondIteration.value).toBeDefined();
 
-    if (!chunk2.value) {
-      return;
-    }
+    const chunk2 = result(secondIteration.value as Result<Uint8Array>);
 
-    expect(chunk2.value.error).toBeUndefined();
-    expect(chunk2.value.value).toBeDefined();
-    expect(chunk2.value.value.length).toBe(1);
-    expect(chunk2.value.value[0]).toBe('i'.charCodeAt(0));
+    expect(chunk2.length).toBe(1);
+    expect(chunk2[0]).toBe('i'.charCodeAt(0));
 
-    const chunk3 = await frame.body.next();
+    const thirdIteration =  await frame.body.next();
 
-    expect(chunk3.done).toBe(false);
-    expect(chunk3.value).toBeDefined();
+    expect(thirdIteration.done).toBe(false);
+    expect(thirdIteration.value).toBeDefined();
 
-    if (!chunk3.value) {
-      return;
-    }
+    const chunk3 = result(thirdIteration.value as Result<Uint8Array>);
 
-    expect(chunk3.value.error).toBeUndefined();
-    expect(chunk3.value.value).toBeDefined();
-    expect(chunk3.value.value.length).toBe(0);
+    expect(chunk3.length).toBe(0);
 
-    const chunk4 = await frame.body.next();
+    const fourthIteration = await frame.body.next();
 
-    expect(chunk4.done).toBe(true);
-    expect(chunk4.value).toBeUndefined();
+    expect(fourthIteration.done).toBe(true);
+    expect(fourthIteration.value).toBeUndefined();
   });
 
   test('malformed command line', async () => {
 
-    const readResult = await readFrame(reader('\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+    const result = await readFrame(reader('\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
 
-    expect(readResult.error).toBeDefined();
-    expect(readResult.error?.message).toBe('malformed frame expected command line');
+    expect(failed(result) && error(result).message).toBe('malformed frame expected command line');
   });
 
   test('malformed header line', async () => {
 
-    const readResult = await readFrame(reader('CONNECT\ninvalidheader\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+    const result = await readFrame(reader('CONNECT\ninvalidheader\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
 
-    expect(readResult.error).toBeDefined();
-    expect(readResult.error?.message).toBe('header parse error invalidheader');
+    expect(failed(result) && error(result).message).toBe('header parse error invalidheader');
   });
 });

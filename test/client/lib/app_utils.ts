@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { VoidResult } from '../../../src/result';
+import { VoidResult, failed, error } from '../../../src/result';
 import { netConnect } from '../../../src/transport/netSocketStream';
 import { connect } from '../../../src/client/connect';
 import { ClientSession } from '../../../src/client/session';
@@ -35,7 +35,7 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
 
   const log = logger(name);
 
-  const error = (message: string): Error => {
+  const handleError = (message: string): Error => {
     log(message);
     return new Error(message);
   };
@@ -43,7 +43,7 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
   const config = getConnectionConfig();
 
   if (!config) {
-    return error('Config not found: BROKER env unset or the broker service is not running');
+    return handleError('Config not found: BROKER env unset or the broker service is not running');
   }
 
   const tcpConnectResult = await netConnect({
@@ -53,8 +53,8 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
 
   const endpoint = [config.host, config.port].join(':');
 
-  if (tcpConnectResult.error) {
-    return error(`Could not connect to ${endpoint}/tcp: ${tcpConnectResult.error.message}`);
+  if (failed(tcpConnectResult)) {
+    return handleError(`Could not connect to ${endpoint}/tcp: ${error(tcpConnectResult).message}`);
   }
 
   log(`TCP connection established to ${endpoint}`);
@@ -63,8 +63,8 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
 
   const stompConnectResult = await connect(transport, FrameHeaders.fromMap(config.connectHeaders));
 
-  if (stompConnectResult.error) {
-    return error(`Could not establish STOMP session: ${stompConnectResult.error.message}`);
+  if (failed(stompConnectResult)) {
+    return handleError(`Could not establish STOMP session: ${error(stompConnectResult).message}`);
   }
 
   log('STOMP session established');
@@ -89,7 +89,7 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     const disconnectError = await session.disconnect();
 
     if (disconnectError) {
-      return error(`Disconnect error: ${disconnectError.message}`);
+      return handleError(`Disconnect error: ${disconnectError.message}`);
     }
   }
 

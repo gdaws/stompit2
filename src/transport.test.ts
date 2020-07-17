@@ -1,4 +1,5 @@
 import { Chunk, alloc, concatPair, decodeString, encodeUtf8String } from './stream/chunk';
+import { result, failed, error } from './result';
 import { TransportStream, StandardTransport, limitDefaults } from './transport';
 import { STOMP_VERSION_10, STOMP_VERSION_12 } from './frame/protocol';
 import { FrameHeaders } from './frame/header';
@@ -91,32 +92,13 @@ test('frame serialisation', async () => {
 
   stream.read[0].push(encodeUtf8String('CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\x00\n'));
 
-  const frameResult = await client.readFrame(STOMP_VERSION_10);
-
-  if (frameResult.cancelled) {
-    expect(frameResult.cancelled).toBe(false);
-    return;
-  }
-
-  if (frameResult.error) {
-    expect(frameResult.error).toBeUndefined();
-    return;
-  }
-
-  const connectedFrame = frameResult.value;
+  const connectedFrame = result(await client.readFrame(STOMP_VERSION_10));
 
   expect(connectedFrame.command).toBe('CONNECTED');
   expect(connectedFrame.headers.get('version')).toBe('1.2');
   expect(connectedFrame.headers.get('heart-beat')).toBe('0,0');
 
-  const readBody = await readEmptyBody(connectedFrame.body);
-
-  if (readBody.cancelled) {
-    expect(readBody.cancelled).toBe(false);
-    return;
-  }
-
-  expect(readBody.error).toBeUndefined();
+  result(await readEmptyBody(connectedFrame.body));
 });
 
 test('heartbeat send', async () => {
@@ -174,19 +156,9 @@ test('heartbeat receive', async () => {
 
   stream.read[0].push(encodeUtf8String('CONNECTED\nversion:1.2\nheart-beat:5,0\n\n\x00\n'));
 
-  const readConnected = await client.readFrame(STOMP_VERSION_10);
+  const connectedFrame = result(await client.readFrame(STOMP_VERSION_10));
 
-  if (readConnected.cancelled) {
-    expect(readConnected.cancelled).toBe(false);
-    return;
-  }
-
-  if (readConnected.error) {
-    expect(readConnected.error).toBeUndefined();
-    return;
-  }
-
-  await readEmptyBody(readConnected.value.body);
+  await readEmptyBody(connectedFrame.body);
 
   let bytesReadOnConnected = stream.bytesRead;
 
@@ -203,23 +175,13 @@ test('heartbeat receive', async () => {
 
   jest.advanceTimersByTime(10);
 
-  const message = encodeUtf8String('MESSAGE\nsubscription:0\nmessage-id:1\ndestination:2\n\ntest\x00\n');
+  const message = encodeUtf8String('MESSAGE\nsubscription:0\nmessage-id:1\ndestination:2\n\ntest\x00\n')
 
   stream.read[0].push(message);
 
   jest.advanceTimersByTime(10);
 
-  const messageResult = await readMessage;
-
-  if (messageResult.cancelled) {
-    expect(messageResult.cancelled).toBe(false);
-    return;
-  }
-
-  if (messageResult.error) {
-    expect(messageResult.error).toBeUndefined();
-    return;
-  }
+  result(await readMessage);
 
   expect(stream.bytesRead).toBe(bytesReadOnConnected + 2 + message.byteLength)
 });
@@ -241,21 +203,9 @@ test('session timeout', async () => {
 
   stream.read[0].push(encodeUtf8String('CONNECTED\nversion:1.2\nheart-beat:5,0\n\n\x00\n'));
 
-  const readConnected = await client.readFrame(STOMP_VERSION_10);
+  const connectedFrame = result(await client.readFrame(STOMP_VERSION_10));
 
-  if (readConnected.cancelled) {
-    expect(readConnected.cancelled).toBe(false);
-    return;
-  }
-
-  if (readConnected.error) {
-    expect(readConnected.error).toBeUndefined();
-    return;
-  }
-
-  await readEmptyBody(readConnected.value.body);
-
-  let bytesReadOnConnected = stream.bytesRead;
+  await readEmptyBody(connectedFrame.body);
 
   const readMessage = client.readFrame(STOMP_VERSION_12);
 
@@ -263,11 +213,7 @@ test('session timeout', async () => {
 
   const messageResult = await readMessage;
 
-  expect(messageResult.error).toBeDefined();
-
-  if (messageResult.error) {
-    expect(messageResult.error.message).toBe('session timeout');
-  }
+  expect(failed(messageResult) && error(messageResult).message).toBe('session timeout');
 
   expect(stream.closed).toBe(true);
 });
@@ -284,13 +230,7 @@ test('close', async () => {
 
   const readResult = await client.readFrame(STOMP_VERSION_10);
 
-  if (readResult.cancelled) {
-    expect(readResult.cancelled).toBe(false);
-    return;
-  }
-
-  expect(readResult.error).toBeDefined();
-  expect(readResult.error?.message).toBe('session closed');
+  expect(failed(readResult) && error(readResult).message).toBe('session closed');
 
   const writeError = await client.writeFrame({
     command: 'CONNECT', 

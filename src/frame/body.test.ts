@@ -13,7 +13,7 @@ import {
 
 import { FrameBody, FrameBodyChunk } from './protocol';
 import { Chunk, alloc, concatPair, decodeString } from '../stream/chunk';
-import { success } from '../result';
+import { ok, failed, result, error } from '../result';
 import { createSignal } from '../concurrency';
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
@@ -22,14 +22,14 @@ async function read(body: FrameBody): Promise<FrameBodyChunk> {
 
   for await (const chunk of body) {
 
-    if (chunk.error) {
+    if (failed(chunk)) {
       return chunk;
     }
 
     result = concatPair(result, chunk.value);
   }
 
-  return success(result);
+  return ok(result);
 }
 
 test('writeEmptyBody', async () => {
@@ -41,28 +41,23 @@ test('writeEmptyBody', async () => {
 describe('readEmptyBody', () => {
 
   test('empty body', async () => {
-    const result = await readEmptyBody(writeEmptyBody());
-    expect(result.error).toBeUndefined();
+    result(await readEmptyBody(writeEmptyBody()));
   });
   
   test('error', async () => {
-
-    const result = await readEmptyBody(writeError(new Error('fail')));
-
-    expect(result.error).toBeDefined();
-    expect(result.error?.message).toBe('fail');
+    const result = await readEmptyBody(writeError(new Error('fail test')));
+    expect(failed(result) && error(result).message).toBe('fail test');
   });
 
   test('non-empty body', async () => {
 
     const createNonEmptyBody = async function *() {
-      yield success(Buffer.alloc(10));
+      yield ok(Buffer.alloc(10));
     };
 
     const result = await readEmptyBody(createNonEmptyBody());
 
-    expect(result.error).toBeDefined();
-    expect(result.error?.message).toBe('expected empty body');
+    expect(failed(result) && error(result).message).toBe('expected empty body');
   });
 });
 
@@ -117,53 +112,43 @@ test('writeString', async () => {
 
 test('readString', async () => {
 
-  const result = await readString(writeString('hello'));
+  const value = result(await readString(writeString('hello')));
 
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(result.value).toBe('hello');
+  expect(value).toBe('hello');
 });
 
 test('readString error', async () => {
 
   const result = await readString(writeError(new Error('fail')));
-
-  expect(result.error).toBeDefined();
+  
+  expect(failed(result) && error(result).message).toBe('fail');
 });
 
 test('readString unsupported encoding', async () => {
 
   const result = await readString(writeString('hello'), 'unsupported' as any);
 
-  expect(result.error).toBeDefined();
+  expect(failed(result)).toBe(true);
 });
 
 test('readJson', async () => {
 
-  const result = await readJson(writeString(`{"a": 1, "b": "hello", "c": [1, 2]}`));
+  const value = result(await readJson(writeString(`{"a": 1, "b": "hello", "c": [1, 2]}`)));
 
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(typeof result.value).toBe('object');
-  expect(result.value.a).toBe(1);
-  expect(result.value.b).toBe('hello');
-  expect(Array.isArray(result.value.c)).toBe(true);
+  expect(typeof value).toBe('object');
+  expect(value.a).toBe(1);
+  expect(value.b).toBe('hello');
+  expect(Array.isArray(value.c)).toBe(true);
 });
 
 test('readJson read error', async () => {
   const result = await readJson(writeError(new Error('fail')));
-  expect(result.error).toBeDefined();
+  expect(failed(result) && error(result).message).toBe('fail');
 });
 
 test('readJson decode error', async () => {
   const result = await readJson(writeString(`{{{`));
-  expect(result.error).toBeDefined();
+  expect(failed(result)).toBe(true);
 });
 
 test('writeJson', async () => {
@@ -175,16 +160,9 @@ test('writeJson', async () => {
 
   const body = writeJson(expected);
 
-  const result = await read(body);
+  const string = result(await read(body));
   
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(result.value).toBeDefined();
-
-  const actual = JSON.parse(decodeString(result.value));
+  const actual = JSON.parse(decodeString(string));
 
   expect(actual.a).toBe(expected.a);
   expect(actual.b).toBe(expected.b);
@@ -194,11 +172,9 @@ test('writeJson error', async () => {
 
   const writeIterator = writeJson(BigInt(1));
 
-  const writeResult = await writeIterator.next();
+  const result = await writeIterator.next();
 
-  const value = writeResult.value;
-
-  expect(value.error).toBeDefined();
+  expect(failed(result.value)).toBe(true);
 });
 
 test('createEmitEndDecorator', async () => {

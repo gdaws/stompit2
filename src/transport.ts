@@ -1,4 +1,4 @@
-import { Result, VoidResult, success, fail } from './result';
+import { Result, VoidResult, ok, fail, failed, error } from './result';
 import { Chunk } from './stream/chunk';
 import { Reader } from './stream/reader';
 import { ReadLimits, readFrame } from './frame/input';
@@ -207,8 +207,8 @@ export class StandardTransport implements Transport {
 
     const result = await readFrame(this.reader, params);
 
-    if (result.error) {
-      return this.failStream(result.error);
+    if (failed(result)) {
+      return this.failStream(error(result));
     }
 
     if (!this.sessionStarted) {
@@ -221,8 +221,8 @@ export class StandardTransport implements Transport {
 
         const heartbeat = this.startHeartBeat(frame.headers);
 
-        if (heartbeat.error) {
-          return this.failStream(heartbeat.error);
+        if (failed(heartbeat)) {
+          return this.failStream(error(heartbeat));
         }
       }
     }
@@ -282,8 +282,8 @@ export class StandardTransport implements Transport {
 
         const heartbeat = this.startHeartBeat(frame.headers, false);
 
-        if (heartbeat.error) {
-          return this.failStream(heartbeat.error).error;
+        if (failed(heartbeat)) {
+          return this.failStream(error(heartbeat)).error;
         }
 
         const [sendRate, recvRate] = heartbeat.value;
@@ -363,7 +363,7 @@ export class StandardTransport implements Transport {
     const heartBeatString = headers.get('heart-beat');
 
     if (undefined === heartBeatString) {
-      return success([0, 0]);
+      return ok([0, 0]);
     }
 
     const heartBeatTokens = heartBeatString.match(/^(\d+),(\d+)$/);
@@ -392,7 +392,7 @@ export class StandardTransport implements Transport {
       this.monitorReadRate(readRate + this.limits.delayTolerance);
     }
 
-    return success([writeRate, readRate]);
+    return ok([writeRate, readRate]);
   }
 
   private monitorReadRate(milliseconds: number) {

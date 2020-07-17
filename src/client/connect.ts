@@ -1,4 +1,4 @@
-import { success, fail, Result } from '../result';
+import { ok, fail, failed, Result } from '../result';
 import { FrameHeaders } from '../frame/header';
 
 import { 
@@ -51,8 +51,8 @@ export async function connect(transport: Transport, headers: FrameHeaders): Prom
 
   const readResult = await transport.readFrame(STOMP_VERSION_10);
 
-  if (readResult.error) {
-    return fail(readResult.error);
+  if (failed(readResult)) {
+    return readResult;
   }
 
   const response = readResult.value;
@@ -79,9 +79,9 @@ export async function connect(transport: Transport, headers: FrameHeaders): Prom
 
   const bodyResult = await readEmptyBody(response.body);
 
-  if (bodyResult.error) {
-    return fail(bodyResult.error);
+  if (failed(bodyResult)) {
+    return bodyResult;
   }
 
-  return success(new ClientSession(transport, version));
+  return ok(new ClientSession(transport, version));
 }

@@ -1,4 +1,4 @@
-import { success, fail } from '../result';
+import { ok, fail, failed, error, result } from '../result';
 import { FrameHeaders } from '../frame/header';
 import { writeString, readString } from '../frame/body';
 import { Receivable, MessageResult, Subscription } from './session';
@@ -52,7 +52,7 @@ class MockSession implements Receivable {
 };
 
 function message(content: string) {
-  return success({
+  return ok({
     command: 'MESSAGE',
     headers: new FrameHeaders([
     ]),
@@ -84,35 +84,11 @@ describe('messageQueue', () => {
 
     const receive = messageQueue(session, subscription, readString);
 
-    const result1 = await receive();
-
-    if (result1.error) {
-      expect(result1.error).toBeUndefined();
-      return;
-    }
-
-    if (result1.cancelled) {
-      expect(result1.cancelled).toBe(false);
-      return;
-    }
-
-    const message1 = result1.value;
+    const message1 = result(await receive());
 
     expect(message1.data).toBe('one');
 
-    const result2 = await receive();
-
-    if (result2.error) {
-      expect(result2.error).toBeUndefined();
-      return;
-    }
-
-    if (result2.cancelled) {
-      expect(result2.cancelled).toBe(false);
-      return;
-    }
-
-    const message2 = result2.value;
+    const message2 = result(await receive());
 
     expect(message2.data).toBe('two');
   });
@@ -129,12 +105,10 @@ describe('messageQueue', () => {
 
     const result1 = await receive();
 
-    expect(result1.error).toBeDefined();
-    expect(result1.error?.message).toBe('session disconnected');
+    expect(failed(result1) && error(result1).message).toBe('session disconnected');
 
     const result2 = await receive();
 
-    expect(result2.error).toBeDefined();
-    expect(result2.error?.message).toBe('session disconnected');
+    expect(failed(result2) && error(result2).message).toBe('session disconnected');
   });
 });

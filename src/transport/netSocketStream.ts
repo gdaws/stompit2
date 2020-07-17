@@ -1,5 +1,5 @@
 import { Socket, SocketConnectOpts, createConnection } from 'net';
-import { Result, success, fail } from '../result';
+import { Result, ok, fail } from '../result';
 import { Chunk } from '../stream/chunk';
 import { VoidResult } from '../result';
 
@@ -64,7 +64,7 @@ export function netConnect(options: SocketConnectOpts, limits?: Partial<Transpor
   return new Promise((resolve) => {
     const socket = createConnection(options, () => {
       const stream = new NetSocketStream(socket);
-      resolve(success(new StandardTransport(stream, {...limitDefaults, ...(limits || {})})));
+      resolve(ok(new StandardTransport(stream, {...limitDefaults, ...(limits || {})})));
     });
     socket.once('error', (error) => {
       resolve(fail(error));

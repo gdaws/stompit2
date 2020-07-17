@@ -1,4 +1,4 @@
-import { success, fail, Result } from '../result';
+import { ok, fail, failed, error, Result } from '../result';
 import { TextEncoding } from '../stream/chunk';
 import { SignalEmitter } from '../concurrency';
 import { FrameBody } from './protocol';
@@ -33,8 +33,8 @@ export async function readEmptyBody(body: FrameBody): Promise<Result<undefined>>
   
   for await (const chunkResult of body) {
 
-    if (chunkResult.error) {
-      return fail(chunkResult.error);
+    if (failed(chunkResult)) {
+      return chunkResult;
     }
 
     if (chunkResult.value.length > 0) {
@@ -42,11 +42,11 @@ export async function readEmptyBody(body: FrameBody): Promise<Result<undefined>>
     }
   }
 
-  return success(undefined);
+  return ok(undefined);
 }
 
 export async function* writeBuffer(buffer: Buffer): FrameBody {
-  yield success(buffer);
+  yield ok(buffer);
 }
 
 /**
@@ -57,7 +57,7 @@ export async function* writeBuffer(buffer: Buffer): FrameBody {
  */
 export async function* writeString(value: string): FrameBody {
   const encoder = new TextEncoder();
-  yield success(encoder.encode(value));
+  yield ok(encoder.encode(value));
 }
 
 /**
@@ -81,8 +81,8 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
 
   for await (const chunkResult of body) {
     
-    if (chunkResult.error) {
-      return fail(chunkResult.error);
+    if (failed(chunkResult)) {
+      return chunkResult;
     }
 
     try {
@@ -100,7 +100,7 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
     return fail(decodeError);
   }
 
-  return success(result);
+  return ok(result);
 }
 
 /**
@@ -129,13 +129,13 @@ export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'
 
   const string = await readString(body, encoding);
 
-  if (string.error) {
-    return fail(string.error);
+  if (failed(string)) {
+    return string;
   }
 
   try {
     const value = JSON.parse(string.value);
-    return success(value);
+    return ok(value);
   }
   catch(jsonParseError) {
     return fail(jsonParseError);
@@ -153,8 +153,8 @@ export async function* createEmitEndDecorator(actual: FrameBody, onEnd: SignalEm
 
     yield chunk;
 
-    if (chunk.error) {
-      onEnd(chunk.error);
+    if (failed(chunk)) {
+      onEnd(error(chunk));
       return;
     }
   }

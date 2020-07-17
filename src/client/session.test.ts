@@ -1,4 +1,4 @@
-import { Result, success, fail } from '../result';
+import { Result, result, ok, fail, failed, error, RESULT_CANCELLED, RESULT_OK } from '../result';
 import { createQueue, Queue } from '../queue';
 import { Frame, ProtocolVersion, STOMP_VERSION_12 } from '../frame/protocol';
 import { FrameHeaders, HeaderLineOptional } from '../frame/header';
@@ -42,10 +42,10 @@ class MockServer implements Transport {
     this.resultQueue = createQueue<Result<Frame>>();
     
     for (const frame of outputFrames) {
-      this.resultQueue[0].push(success(frame));
+      this.resultQueue[0].push(ok(frame));
     }
 
-    outputFrames.map(frame => success(frame));
+    outputFrames.map(frame => ok(frame));
 
     this.writeFrameResult = Promise.resolve(undefined);;
     this.calls = [];
@@ -119,14 +119,9 @@ test('send', async () => {
   expect(frame.headers.get('destination')).toBe('/queue/a');
   expect(frame.headers.get('content-type')).toBe('text/plain');
 
-  const body = await readString(frame.body);
+  const body = result(await readString(frame.body));
 
-  if (body.error) {
-    expect(body.error).toBeUndefined();
-    return;
-  }
-
-  expect(body.value).toBe('hello');
+  expect(body).toBe('hello');
 });
 
 test('send after shutdown', async () => {
@@ -228,7 +223,7 @@ test('latest receipt completes previous receipt requets', async () => {
   const send2 = session.send(message([['destination', '/queue/b']], 'hello'));
   const send3 = session.send(message([['destination', '/queue/c']], 'hello'));
 
-  server.push(success(receipt('3')));
+  server.push(ok(receipt('3')));
 
   const [send1Result, send2Result, send3Result] = await Promise.all([send1, send2, send3]);
 
@@ -245,7 +240,7 @@ test('reciept does not complete newer receipt request', async () => {
   const send1 = session.send(message([['destination', '/queue/a']], 'hello'));
   const send2 = session.send(message([['destination', '/queue/b']], 'hello'));
 
-  server.push(success(receipt('1')));
+  server.push(ok(receipt('1')));
 
   const [send1Result, send2Result] = await Promise.all([send1, send2]);
 
@@ -282,12 +277,7 @@ test('begin', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const result = await session.begin(RECEIPT_DEFAULT_TIMEOUT);
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
+  const transaction = result(await session.begin(RECEIPT_DEFAULT_TIMEOUT));
 
   expect(server.calls.length).toBe(2);
 
@@ -295,10 +285,6 @@ test('begin', async () => {
 
   expect(frame.command).toBe('BEGIN');
   expect(frame.headers.has('transaction')).toBe(true);
-
-  expect(result.value).toBeDefined();
-
-  const transaction = result.value;
 
   expect(transaction.id).toBe(frame.headers.get('transaction'));
 });
@@ -312,7 +298,7 @@ test('begin error', async () => {
 
   const result = await session.begin(RECEIPT_DEFAULT_TIMEOUT);
 
-  expect(result.error).toBeDefined();
+  expect(failed(result)).toBe(true);
 });
 
 test('commit', async () => {
@@ -389,14 +375,7 @@ test('subscribe', async () => {
 
   const destination = '/queue/a';
 
-  const result = await session.subscribe(destination);
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-  
-  const subscription = result.value;
+  const subscription = result(await session.subscribe(destination));
 
   expect(server.calls.length).toBe(2);
 
@@ -420,7 +399,7 @@ test('subscribe error', async () => {
 
   const result = await session.subscribe('/queue/a');
 
-  expect(result.error).toBeDefined();
+  expect(failed(result)).toBe(true);
 });
 
 test('unsubscribe', async () => {
@@ -469,12 +448,7 @@ test('unsubscribe cancels receive', async () => {
 
   const result = await receive;
 
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(result.cancelled).toBe(true);
+  expect(result.status).toBe(RESULT_CANCELLED);
 });
 
 test('ack', async () => {
@@ -530,21 +504,7 @@ test('receive', async () => {
 
   const subscription = {id: '1', headers: new FrameHeaders([])};
 
-  const result = await session.receive(subscription);
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-  
-  if (result.cancelled) {
-    expect(result.cancelled).toBe(false);
-    return;
-  }
-
-  expect(result.value).toBeDefined();
-
-  const message = result.value;
+  const message = result(await session.receive(subscription));
 
   expect(message.command).toBe('MESSAGE');
   expect(message.headers.get('subscription')).toBe('1');
@@ -552,14 +512,9 @@ test('receive', async () => {
   expect(message.headers.get('destination')).toBe('/queue/a');
   expect(message.headers.get('content-type')).toBe('text/plain');
   
-  const bodyString = await readString(message.body);
+  const bodyString = result(await readString(message.body));
 
-  if (bodyString.error) {
-    expect(bodyString.error).toBeUndefined();
-    return;
-  }
-
-  expect(bodyString.value).toBe('hello');
+  expect(bodyString).toBe('hello');
 });
 
 test('cancelReceive', async () => {
@@ -575,12 +530,7 @@ test('cancelReceive', async () => {
 
   const result = await receive;
 
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(result.cancelled).toBe(true);
+  expect(result.status).toBe(RESULT_CANCELLED);
 });
 
 test('cancelReceive on unknown operation', async () => {
@@ -602,7 +552,7 @@ test('receive reset', async () => {
   const receive1 = session.receive(dummySubscription);
   const receive2 = session.receive(dummySubscription);
 
-  server.push(success({
+  server.push(ok({
     command: 'MESSAGE',
     headers: new FrameHeaders([
       ['subscription', dummySubscription.id]
@@ -612,32 +562,8 @@ test('receive reset', async () => {
 
   const [result1, result2] = await Promise.all([receive1, receive2]);
 
-  if (!result1) {
-    expect(result1).toBeDefined();
-    return;
-  }
-
-  if (result1.error) {
-    expect(result1.error).toBeUndefined();
-    return;
-  }
-
-  expect(result1.cancelled).toBe(true);
-
-  if (!result2) {
-    expect(result2).toBeDefined();
-    return;
-  }
-
-  if (result2.error) {
-    expect(result2.error).toBeUndefined();
-    return;
-  }
-
-  if (result2.cancelled) {
-    expect(result2.cancelled).toBe(false);
-    return;
-  }
+  expect(result1.status).toBe(RESULT_CANCELLED);
+  expect(result2.status).toBe(RESULT_OK);
 });
 
 test('readFrame fail', async () => {
@@ -652,16 +578,12 @@ test('readFrame fail', async () => {
 
   server.push(fail(new Error('fake transport error')));
 
-  const [sendResult, receiveResult] = await Promise.all([send, receive]);
+  const [sendError, receiveResult] = await Promise.all([send, receive]);
 
-  expect(sendResult).toBeDefined();
-  expect(sendResult?.message).toBe('session disconnected');
+  expect(sendError && sendError.message).toBe('session disconnected');
 
-  if (receiveResult) {
-    expect(receiveResult.error).toBeDefined();
-    expect(receiveResult.error?.message).toBe('session disconnected');
-  }
-  
+  expect(failed(receiveResult) && error(receiveResult).message).toBe('session disconnected');
+
   expect(session.isDisconnected()).toBe(true);
 
   const disconnectError = session.getDisconnectError();
@@ -755,17 +677,7 @@ test('disconnect cancels receive', (done) => {
 
     const [messageResult, disconnectError] = result;
 
-    if (!messageResult) {
-      expect(messageResult);
-      return;
-    }
-
-    if (messageResult.error) {
-      expect(messageResult.error).toBeUndefined();
-      return;
-    }
-
-    expect(messageResult.cancelled).toBe(true);
+    expect(messageResult.status).toBe(RESULT_CANCELLED);
 
     expect(disconnectError).toBeUndefined();
 
@@ -843,12 +755,7 @@ test('shutdown cancels receive', (done) => {
 
   message.then(result => {
 
-    if (result.error) {
-      expect(result.error).toBeUndefined();
-      return;
-    }
-
-    expect(result.cancelled).toBe(true);
+    expect(result.status).toBe(RESULT_CANCELLED);
 
     done();
   });
@@ -861,7 +768,7 @@ test('unhandled message', async() => {
 
   const receive = session.receive({id: '1', headers: new FrameHeaders([])});
   
-  server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', '2']]), body: writeString('hello')}));
+  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', '2']]), body: writeString('hello')}));
 
   await receive;
 
@@ -882,18 +789,11 @@ test('receive unhandled message', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const subscribeResult = await session.subscribe('/queue/test');
-
-  if (subscribeResult.error) {
-    expect(subscribeResult.error).toBeUndefined();
-    return;
-  }
+  const subscription = result(await session.subscribe('/queue/test'));
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const subscription = subscribeResult.value;
-
-  server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
+  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
   
   // call receive for another subscription to get the receive loop running
   session.receive({id: subscription.id + '_different', headers: new FrameHeaders([])});
@@ -901,17 +801,7 @@ test('receive unhandled message', async () => {
   // FIXME find a more reliable way to synchronise
   await sleep(1);
 
-  const receiveResult = await session.receive({id: subscription.id, headers: new FrameHeaders([])});
-
-  if (receiveResult.error) {
-    expect(receiveResult.error).toBeUndefined();
-    return;
-  }
-
-  if (receiveResult.cancelled) {
-    expect(receiveResult.cancelled).toBeUndefined();
-    return;
-  }
+  result(await session.receive({id: subscription.id, headers: new FrameHeaders([])}));
 });
 
 test('unhandled message after unsubscribe', async() => {
@@ -919,18 +809,11 @@ test('unhandled message after unsubscribe', async() => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const subscribeResult = await session.subscribe('/queue/test');
-
-  if (subscribeResult.error) {
-    expect(subscribeResult.error).toBeUndefined();
-    return;
-  }
-
-  const subscription = subscribeResult.value;
+  const subscription = result(await session.subscribe('/queue/test'));
 
   await session.unsubscribe(subscription);
   
-  server.push(success({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
+  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
 
   // call receive for another subscription to get the receive loop running
   await session.receive({id: '2', headers: new FrameHeaders([])});

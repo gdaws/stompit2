@@ -1,4 +1,5 @@
 import { session, logger } from './lib/app_utils';
+import { RESULT_OK, RESULT_CANCELLED, failed, error, result } from '../../src/result';
 import { FrameHeaders } from '../../src/frame/header';
 import { writeBuffer } from '../../src/frame/body';
 
@@ -48,13 +49,7 @@ async function speedtest() {
 
   const consumer = session('Consumer', async (session, log) => {
 
-    const subRequestResult = await session.subscribe(queueName);
-
-    if (subRequestResult.error) {
-      throw subRequestResult.error;
-    }
-
-    const subscription = subRequestResult.value;
+    const subscription = result(await session.subscribe(queueName));
 
     (async () => {
       await sleep(duration);
@@ -65,19 +60,20 @@ async function speedtest() {
 
       const receiveResult = await session.receive(subscription);
       
-      if (receiveResult.error) {
-        throw receiveResult.error;
-      }
-
-      if (receiveResult.cancelled) {
-        break;
+      if (receiveResult.status !== RESULT_OK) {
+        if (receiveResult.status === RESULT_CANCELLED) {
+          break;
+        }
+        else {
+          throw error(receiveResult);
+        }
       }
 
       const message = receiveResult.value;
 
       for await (const chunkResult of message.body) {
-        if (chunkResult.error) {
-          throw chunkResult.error;
+        if (failed(chunkResult)) {
+          throw error(chunkResult);
         }
       }
 

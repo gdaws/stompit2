@@ -1,4 +1,4 @@
-import { Result, fail } from './result';
+import { Result, fail, failed } from './result';
 import { FrameHeaders } from './frame/header';
 import { Transport } from './transport';
 import { connect as stompConnectImpl } from './client/connect';
@@ -18,8 +18,8 @@ export async function stompConnect(transportConnect: Promise<Result<Transport>>,
 
   const transConnectResult = await transportConnect;
 
-  if (transConnectResult.error) {
-    return fail(transConnectResult.error);
+  if (failed(transConnectResult)) {
+    return transConnectResult;
   }
 
   const transport = transConnectResult.value;

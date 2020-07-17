@@ -5,10 +5,13 @@ import {
 } from '../frame/protocol';
 
 import { FrameHeaders } from '../frame/header';
+
 import { 
-  success, 
+  ok, 
   cancel, 
   fail, 
+  failed,
+  error,
   Result, 
   VoidResult, 
   CancelResult 
@@ -218,7 +221,7 @@ export class ClientSession implements Receivable, AckSendable {
       return fail(sendError);
     }
 
-    return success({id, headers});
+    return ok({id, headers});
   }
 
   /**
@@ -285,7 +288,7 @@ export class ClientSession implements Receivable, AckSendable {
       return fail(sendError);
     }
 
-    return success({id, headers});
+    return ok({id, headers});
   }
 
   /**
@@ -338,7 +341,7 @@ export class ClientSession implements Receivable, AckSendable {
       if (this.unhandledMessage && this.unhandledMessage.headers.get('subscription') === id) {
         const message = this.unhandledMessage;
         this.unhandledMessage = undefined;
-        resolve(success(message));
+        resolve(ok(message));
         return;
       }
 
@@ -612,8 +615,8 @@ export class ClientSession implements Receivable, AckSendable {
 
     const readFrameResult = await this.transport.readFrame(this.protocolVersion);
 
-    if (readFrameResult.error) {
-      return this.shutdown(readFrameResult.error);
+    if (failed(readFrameResult)) {
+      return this.shutdown(error(readFrameResult));
     }
 
     const frame = readFrameResult.value;
@@ -642,7 +645,7 @@ export class ClientSession implements Receivable, AckSendable {
           
           delete this.messageRequests[subscriptionId];
 
-          callback(success(message));
+          callback(ok(message));
         }
         else {
           const id = message.headers.get('subscription');
@@ -665,8 +668,8 @@ export class ClientSession implements Receivable, AckSendable {
 
         const readBodyResult = await readEmptyBody(frame.body);
 
-        if (readBodyResult.error) {
-          return this.shutdown(readBodyResult.error);
+        if (failed(readBodyResult)) {
+          return this.shutdown(error(readBodyResult));
         }
 
         const receiptId = frame.headers.get('receipt-id');

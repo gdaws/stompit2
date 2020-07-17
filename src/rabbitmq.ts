@@ -1,4 +1,4 @@
-import { fail, Result } from './result';
+import { fail } from './result';
 import { RECEIPT_NOT_REQUESTED } from './client/receipt';
 import { FrameHeaders } from './frame/header';
 import { Frame } from './frame/protocol';

@@ -1,4 +1,5 @@
 import { Receivable, AckSendable, Subscription, ClientSession } from './session';
+import { failed } from '../result';
 import { RECEIPT_DEFAULT_TIMEOUT } from './receipt';
 import { FrameHeaders } from '../frame/header';
 import { writeBuffer } from '../frame/body';
@@ -41,7 +42,7 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
 
   const messageResult = await session.receive(subscription);
 
-  if (messageResult.error || messageResult.cancelled) {
+  if (failed(messageResult)) {
     return;
   }
 

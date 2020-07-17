@@ -1,4 +1,4 @@
-import { Result, success } from '../result';
+import { Result, ok, failed, result, error } from '../result';
 import { Transport } from '../transport';
 import { Frame, ProtocolVersion, STOMP_VERSION_10 } from '../frame/protocol';
 import { FrameHeaders } from '../frame/header';
@@ -19,7 +19,7 @@ class Server implements Transport {
   }
 
   public static connected(headers: FrameHeaders) {  
-    return new Server(undefined, success({
+    return new Server(undefined, ok({
       command: 'CONNECTED',
       headers,
       body: writeEmptyBody()
@@ -27,7 +27,7 @@ class Server implements Transport {
   }
 
   public static error(headers: FrameHeaders, body: string) {
-    return new Server(undefined, success({
+    return new Server(undefined, ok({
       command: 'ERROR',
       headers,
       body: writeString(body)
@@ -69,7 +69,7 @@ test('connected response', async () => {
     'session': '123456'
   }));
 
-  const result = await connect(server, headers);
+  const session = result(await connect(server, headers));
 
   expect(server.calls.length).toBe(2);
 
@@ -84,26 +84,11 @@ test('connected response', async () => {
   expect(connectFrame.headers.get('passcode')).toBe(headers.get('passcode'));
   expect(connectFrame.headers.has('heart-beat')).toBe(false);
 
-  const readBody = await readEmptyBody(connectFrame.body);
-
-  expect(readBody.error).toBeUndefined();
+  const readBody = result(await readEmptyBody(connectFrame.body));
 
   expect(server.calls[0][1][1]).toBe(STOMP_VERSION_10);
 
   expect(server.calls[1][0]).toBe('readFrame');
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  expect(result.value).toBeDefined();
-
-  const session = result.value;
-
-  if (!session) {
-    return;
-  }
 
   expect(session.isDisconnected()).toBe(false);
   expect(session.getProtocolVersion()).toBe('1.2');
@@ -124,10 +109,5 @@ test('error response', async () => {
 
   const result = await connect(server, headers);
 
-  if (result.error) {
-    expect(result.error).toBeDefined();
-    return;
-  }
-
-  expect(result.value).toBeUndefined();
+  expect(failed(result)).toBe(true);
 });

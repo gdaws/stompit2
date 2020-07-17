@@ -1,5 +1,6 @@
 import { WebSocket, Server } from 'mock-socket';
 import { createSignal } from '../concurrency';
+import { result, failed, error } from '../result';
 import { encodeUtf8String, decodeString } from '../stream/chunk'; 
 import { WebSocketStream, wsConnect } from './webSocketStream';
 
@@ -113,14 +114,7 @@ test('wsConnect', async () => {
 
   new Server(url);
 
-  const result = await wsConnect(url);
-
-  if (result.error) {
-    expect(result.error).toBeUndefined();
-    return;
-  }
-
-  const transport = result.value;
+  const transport = result(await wsConnect(url));
 
   transport.close();
 });
@@ -140,7 +134,5 @@ test('wsConnect error', async () => {
 
   const result = await wsConnect(url);
 
-  if (!result.error) {
-    expect(result.error).toBeDefined();
-  }
+  expect(failed(result));
 });

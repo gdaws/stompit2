@@ -1,5 +1,6 @@
 import { createServer, Socket } from 'net';
 import * as net from 'net';
+import { failed, error, result } from '../result';
 import { encodeUtf8String, decodeString } from '../stream/chunk';
 import { createSignal } from '../concurrency';
 import { NetSocketStream, netConnect } from './netSocketStream';
@@ -181,14 +182,9 @@ test('netConnect', async () => {
     return;
   }
 
-  const connectResult = await netConnect(getConnectOptions());
-
-  if (connectResult.error) {
-    expect(connectResult.error).toBeUndefined();
-    return;
-  }
+  result(await netConnect(getConnectOptions()));
 
   const secondConnectResult = await netConnect({...getConnectOptions(), port: 0});
 
-  expect(secondConnectResult.error).toBeDefined();
+  expect(failed(secondConnectResult));
 });
