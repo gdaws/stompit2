@@ -72,8 +72,10 @@
 							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_src_result_.cancelresult.html" class="tsd-kind-icon">Cancel<wbr>Result</a></li>
-								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_src_result_.failresult.html" class="tsd-kind-icon">Fail<wbr>Result</a></li>
-								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_src_result_.successresult.html" class="tsd-kind-icon">Success<wbr>Result</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_src_result_.errorresult.html" class="tsd-kind-icon">Error<wbr>Result</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_src_result_.okresult.html" class="tsd-kind-icon">Ok<wbr>Result</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_src_result_.resultstatus.html" class="tsd-kind-icon">Result<wbr>Status</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_src_result_.timeoutresult.html" class="tsd-kind-icon">Timeout<wbr>Result</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -84,11 +86,26 @@
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#message_result_cancelled" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>CANCELLED</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#message_result_timeout" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>TIMEOUT</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#result_cancelled" class="tsd-kind-icon">RESULT_<wbr>CANCELLED</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#result_error" class="tsd-kind-icon">RESULT_<wbr>ERROR</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#result_ok" class="tsd-kind-icon">RESULT_<wbr>OK</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_result_.html#result_timeout" class="tsd-kind-icon">RESULT_<wbr>TIMEOUT</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_result_.html#cancel" class="tsd-kind-icon">cancel</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_result_.html#cancelled" class="tsd-kind-icon">cancelled</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#error" class="tsd-kind-icon">error</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#fail" class="tsd-kind-icon">fail</a></li>
-								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#success" class="tsd-kind-icon">success</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#failed" class="tsd-kind-icon">failed</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#ok" class="tsd-kind-icon">ok</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_src_result_.html#result-1" class="tsd-kind-icon">result</a></li>
 							</ul>
 						</section>
 					</div>
@@ -99,10 +116,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
 					<a name="result" class="tsd-anchor"></a>
 					<h3>Result</h3>
-					<div class="tsd-signature tsd-kind-icon">Result&lt;T, E&gt;<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_src_result_.successresult.html" class="tsd-signature-type">SuccessResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_src_result_.failresult.html" class="tsd-signature-type">FailResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<div class="tsd-signature tsd-kind-icon">Result&lt;T, E&gt;<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_src_result_.okresult.html" class="tsd-signature-type">OkResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_src_result_.errorresult.html" class="tsd-signature-type">ErrorResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_src_result_.cancelresult.html" class="tsd-signature-type">CancelResult</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/_src_result_.timeoutresult.html" class="tsd-signature-type">TimeoutResult</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L18">src/result.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L31">src/result.ts:31</a></li>
 						</ul>
 					</aside>
 					<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -121,7 +138,7 @@
 					<div class="tsd-signature tsd-kind-icon">Void<wbr>Result&lt;E&gt;<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">E</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L38">src/result.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L89">src/result.ts:89</a></li>
 						</ul>
 					</aside>
 					<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -130,6 +147,69 @@
 							<h4>E</h4>
 						</li>
 					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="message_result_cancelled" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> MESSAGE_<wbr>RESULT_<wbr>CANCELLED</h3>
+					<div class="tsd-signature tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>CANCELLED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"operation cancelled"</span><span class="tsd-signature-symbol"> = &quot;operation cancelled&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L6">src/result.ts:6</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="message_result_timeout" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> MESSAGE_<wbr>RESULT_<wbr>TIMEOUT</h3>
+					<div class="tsd-signature tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>TIMEOUT<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"operation timed out"</span><span class="tsd-signature-symbol"> = &quot;operation timed out&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L7">src/result.ts:7</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="result_cancelled" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> RESULT_<wbr>CANCELLED</h3>
+					<div class="tsd-signature tsd-kind-icon">RESULT_<wbr>CANCELLED<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">2</span><span class="tsd-signature-symbol"> = 2</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L3">src/result.ts:3</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="result_error" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> RESULT_<wbr>ERROR</h3>
+					<div class="tsd-signature tsd-kind-icon">RESULT_<wbr>ERROR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">1</span><span class="tsd-signature-symbol"> = 1</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L2">src/result.ts:2</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="result_ok" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> RESULT_<wbr>OK</h3>
+					<div class="tsd-signature tsd-kind-icon">RESULT_<wbr>OK<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> = 0</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L1">src/result.ts:1</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="result_timeout" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> RESULT_<wbr>TIMEOUT</h3>
+					<div class="tsd-signature tsd-kind-icon">RESULT_<wbr>TIMEOUT<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">3</span><span class="tsd-signature-symbol"> = 3</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L4">src/result.ts:4</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -144,10 +224,65 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L27">src/result.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L40">src/result.ts:40</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_src_result_.cancelresult.html" class="tsd-signature-type">CancelResult</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="cancelled" class="tsd-anchor"></a>
+					<h3>cancelled</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">cancelled<span class="tsd-signature-symbol">(</span>result<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_result_.resultstatus.html" class="tsd-signature-type">ResultStatus</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">result</span><span class="tsd-signature-symbol"> is </span><span class="tsd-signature-type">CancelResult</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L55">src/result.ts:55</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>result: <a href="../interfaces/_src_result_.resultstatus.html" class="tsd-signature-type">ResultStatus</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">result</span><span class="tsd-signature-symbol"> is </span><span class="tsd-signature-type">CancelResult</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="error" class="tsd-anchor"></a>
+					<h3>error</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">error&lt;T, E&gt;<span class="tsd-signature-symbol">(</span>result<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Exclude</span><span class="tsd-signature-symbol">&lt;</span><a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/_src_result_.okresult.html" class="tsd-signature-type">OkResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L59">src/result.ts:59</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+								<li>
+									<h4>E<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>result: <span class="tsd-signature-type">Exclude</span><span class="tsd-signature-symbol">&lt;</span><a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/_src_result_.okresult.html" class="tsd-signature-type">OkResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Error</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -155,13 +290,13 @@
 					<a name="fail" class="tsd-anchor"></a>
 					<h3>fail</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">fail&lt;ErrorType&gt;<span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_result_.failresult.html" class="tsd-signature-type">FailResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">fail&lt;ErrorType&gt;<span class="tsd-signature-symbol">(</span>error<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_result_.errorresult.html" class="tsd-signature-type">ErrorResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L34">src/result.ts:34</a></li>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L47">src/result.ts:47</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -181,21 +316,53 @@
 									<h5>error: <span class="tsd-signature-type">ErrorType</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_src_result_.failresult.html" class="tsd-signature-type">FailResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_src_result_.errorresult.html" class="tsd-signature-type">ErrorResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ErrorType</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
-					<a name="success" class="tsd-anchor"></a>
-					<h3>success</h3>
+					<a name="failed" class="tsd-anchor"></a>
+					<h3>failed</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">success&lt;T&gt;<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_result_.successresult.html" class="tsd-signature-type">SuccessResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">failed&lt;T, E&gt;<span class="tsd-signature-symbol">(</span>result<span class="tsd-signature-symbol">: </span><a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">result</span><span class="tsd-signature-symbol"> is </span><span class="tsd-signature-type">Exclude</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Result</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">OkResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L23">src/result.ts:23</a></li>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L51">src/result.ts:51</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+								<li>
+									<h4>E</h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>result: <a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">result</span><span class="tsd-signature-symbol"> is </span><span class="tsd-signature-type">Exclude</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Result</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">OkResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="ok" class="tsd-anchor"></a>
+					<h3>ok</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">ok&lt;T&gt;<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_result_.okresult.html" class="tsd-signature-type">OkResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L36">src/result.ts:36</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -215,7 +382,42 @@
 									<h5>value: <span class="tsd-signature-type">T</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_src_result_.successresult.html" class="tsd-signature-type">SuccessResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_src_result_.okresult.html" class="tsd-signature-type">OkResult</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="result-1" class="tsd-anchor"></a>
+					<h3>result</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">result&lt;T, E&gt;<span class="tsd-signature-symbol">(</span>result<span class="tsd-signature-symbol">: </span><a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span>, defaultValue<span class="tsd-signature-symbol">?: </span><a href="" class="tsd-signature-type">T</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L76">src/result.ts:76</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+								<li>
+									<h4>E<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Error</span></h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>result: <a href="_src_result_.html#result" class="tsd-signature-type">Result</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">E</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> defaultValue: <a href="" class="tsd-signature-type">T</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -238,10 +440,16 @@
 						<a href="../interfaces/_src_result_.cancelresult.html" class="tsd-kind-icon">Cancel<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../interfaces/_src_result_.failresult.html" class="tsd-kind-icon">Fail<wbr>Result</a>
+						<a href="../interfaces/_src_result_.errorresult.html" class="tsd-kind-icon">Error<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../interfaces/_src_result_.successresult.html" class="tsd-kind-icon">Success<wbr>Result</a>
+						<a href="../interfaces/_src_result_.okresult.html" class="tsd-kind-icon">Ok<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_src_result_.resultstatus.html" class="tsd-kind-icon">Result<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_src_result_.timeoutresult.html" class="tsd-kind-icon">Timeout<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="_src_result_.html#result" class="tsd-kind-icon">Result</a>
@@ -249,14 +457,44 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="_src_result_.html#voidresult" class="tsd-kind-icon">Void<wbr>Result</a>
 					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#message_result_cancelled" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>CANCELLED</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#message_result_timeout" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>TIMEOUT</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#result_cancelled" class="tsd-kind-icon">RESULT_<wbr>CANCELLED</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#result_error" class="tsd-kind-icon">RESULT_<wbr>ERROR</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#result_ok" class="tsd-kind-icon">RESULT_<wbr>OK</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_result_.html#result_timeout" class="tsd-kind-icon">RESULT_<wbr>TIMEOUT</a>
+					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_src_result_.html#cancel" class="tsd-kind-icon">cancel</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_result_.html#cancelled" class="tsd-kind-icon">cancelled</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_src_result_.html#error" class="tsd-kind-icon">error</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="_src_result_.html#fail" class="tsd-kind-icon">fail</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="_src_result_.html#success" class="tsd-kind-icon">success</a>
+						<a href="_src_result_.html#failed" class="tsd-kind-icon">failed</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_src_result_.html#ok" class="tsd-kind-icon">ok</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_src_result_.html#result-1" class="tsd-kind-icon">result</a>
 					</li>
 				</ul>
 			</nav>

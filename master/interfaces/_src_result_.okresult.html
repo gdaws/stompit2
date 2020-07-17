@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Frame | stompit2</title>
+	<title>OkResult | stompit2</title>
 	<meta name="description" content="Documentation for stompit2">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,31 +54,37 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_src_frame_protocol_.html">&quot;src/frame/protocol&quot;</a>
+					<a href="../modules/_src_result_.html">&quot;src/result&quot;</a>
 				</li>
 				<li>
-					<a href="_src_frame_protocol_.frame.html">Frame</a>
+					<a href="_src_result_.okresult.html">OkResult</a>
 				</li>
 			</ul>
-			<h1>Interface Frame</h1>
+			<h1>Interface OkResult&lt;T&gt;</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Represents a frame inbound or outbound</p>
-					</div>
-				</div>
+			<section class="tsd-panel tsd-type-parameters">
+				<h3>Type parameters</h3>
+				<ul class="tsd-type-parameters">
+					<li>
+						<h4>T</h4>
+					</li>
+				</ul>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Frame</span>
+						<a href="_src_result_.resultstatus.html" class="tsd-signature-type">ResultStatus</a>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">OkResult</span>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -89,9 +95,8 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_frame_protocol_.frame.html#body" class="tsd-kind-icon">body</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_frame_protocol_.frame.html#command" class="tsd-kind-icon">command</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_frame_protocol_.frame.html#headers" class="tsd-kind-icon">headers</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite"><a href="_src_result_.okresult.html#status" class="tsd-kind-icon">status</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_result_.okresult.html#value" class="tsd-kind-icon">value</a></li>
 							</ul>
 						</section>
 					</div>
@@ -99,69 +104,26 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="body" class="tsd-anchor"></a>
-					<h3>body</h3>
-					<div class="tsd-signature tsd-kind-icon">body<span class="tsd-signature-symbol">:</span> <a href="../modules/_src_frame_protocol_.html#framebody" class="tsd-signature-type">FrameBody</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite">
+					<a name="status" class="tsd-anchor"></a>
+					<h3>status</h3>
+					<div class="tsd-signature tsd-kind-icon">status<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><a href="../modules/_src_result_.html#result_ok" class="tsd-signature-type">RESULT_OK</a></div>
 					<aside class="tsd-sources">
+						<p>Overrides <a href="_src_result_.resultstatus.html">ResultStatus</a>.<a href="_src_result_.resultstatus.html#status">status</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/frame/protocol.ts#L74">src/frame/protocol.ts:74</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L14">src/result.ts:14</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>The unread or unwritten body</p>
-						</div>
-					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="command" class="tsd-anchor"></a>
-					<h3>command</h3>
-					<div class="tsd-signature tsd-kind-icon">command<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="value" class="tsd-anchor"></a>
+					<h3>value</h3>
+					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">T</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/frame/protocol.ts#L64">src/frame/protocol.ts:64</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L15">src/result.ts:15</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Standard client commands:</p>
-							<ul>
-								<li>CONNECT</li>
-								<li>STOMP</li>
-								<li>SEND</li>
-								<li>SUBSCRIBE</li>
-								<li>UNSUBSCRIBE</li>
-								<li>ACK</li>
-								<li>NACK</li>
-								<li>BEGIN</li>
-								<li>COMMIT</li>
-								<li>ABORT</li>
-								<li>DISCONNECT</li>
-							</ul>
-						</div>
-						<p>Standard server commands:</p>
-						<ul>
-							<li>CONNECTED</li>
-							<li>MESSAGE</li>
-							<li>ERROR</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="headers" class="tsd-anchor"></a>
-					<h3>headers</h3>
-					<div class="tsd-signature tsd-kind-icon">headers<span class="tsd-signature-symbol">:</span> <a href="../classes/_src_frame_header_.frameheaders.html" class="tsd-signature-type">FrameHeaders</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/frame/protocol.ts#L69">src/frame/protocol.ts:69</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>The header lines</p>
-						</div>
-					</div>
 				</section>
 			</section>
 		</div>
@@ -172,65 +134,83 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="../modules/_src_frame_protocol_.html">&quot;src/frame/protocol&quot;</a>
+						<a href="../modules/_src_result_.html">&quot;src/result&quot;</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="_src_result_.cancelresult.html" class="tsd-kind-icon">Cancel<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_src_result_.errorresult.html" class="tsd-kind-icon">Error<wbr>Result</a>
+					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="_src_frame_protocol_.frame.html" class="tsd-kind-icon">Frame</a>
+					<li class="current tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_src_result_.okresult.html" class="tsd-kind-icon">Ok<wbr>Result</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_src_frame_protocol_.frame.html#body" class="tsd-kind-icon">body</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite">
+								<a href="_src_result_.okresult.html#status" class="tsd-kind-icon">status</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_src_frame_protocol_.frame.html#command" class="tsd-kind-icon">command</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_src_frame_protocol_.frame.html#headers" class="tsd-kind-icon">headers</a>
+								<a href="_src_result_.okresult.html#value" class="tsd-kind-icon">value</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#ackmode" class="tsd-kind-icon">Ack<wbr>Mode</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="_src_result_.resultstatus.html" class="tsd-kind-icon">Result<wbr>Status</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#framebody" class="tsd-kind-icon">Frame<wbr>Body</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="_src_result_.timeoutresult.html" class="tsd-kind-icon">Timeout<wbr>Result</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#framebodychunk" class="tsd-kind-icon">Frame<wbr>Body<wbr>Chunk</a>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#result" class="tsd-kind-icon">Result</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#protocolversion" class="tsd-kind-icon">Protocol<wbr>Version</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#header_char_encoding" class="tsd-kind-icon">HEADER_<wbr>CHAR_<wbr>ENCODING</a>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#voidresult" class="tsd-kind-icon">Void<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#stomp_version_10" class="tsd-kind-icon">STOMP_<wbr>VERSION_<wbr>10</a>
+						<a href="../modules/_src_result_.html#message_result_cancelled" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>CANCELLED</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#stomp_version_11" class="tsd-kind-icon">STOMP_<wbr>VERSION_<wbr>11</a>
+						<a href="../modules/_src_result_.html#message_result_timeout" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>TIMEOUT</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#stomp_version_12" class="tsd-kind-icon">STOMP_<wbr>VERSION_<wbr>12</a>
+						<a href="../modules/_src_result_.html#result_cancelled" class="tsd-kind-icon">RESULT_<wbr>CANCELLED</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_error" class="tsd-kind-icon">RESULT_<wbr>ERROR</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_ok" class="tsd-kind-icon">RESULT_<wbr>OK</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_timeout" class="tsd-kind-icon">RESULT_<wbr>TIMEOUT</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#acceptedackmodes" class="tsd-kind-icon">accepted<wbr>Ack<wbr>Modes</a>
+						<a href="../modules/_src_result_.html#cancel" class="tsd-kind-icon">cancel</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#acceptedversions" class="tsd-kind-icon">accepted<wbr>Versions</a>
+						<a href="../modules/_src_result_.html#cancelled" class="tsd-kind-icon">cancelled</a>
 					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#getackmode" class="tsd-kind-icon">get<wbr>Ack<wbr>Mode</a>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#error" class="tsd-kind-icon">error</a>
 					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/_src_frame_protocol_.html#supportedprotocolversion" class="tsd-kind-icon">supported<wbr>Protocol<wbr>Version</a>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#fail" class="tsd-kind-icon">fail</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#failed" class="tsd-kind-icon">failed</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#ok" class="tsd-kind-icon">ok</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#result-1" class="tsd-kind-icon">result</a>
 					</li>
 				</ul>
 			</nav>

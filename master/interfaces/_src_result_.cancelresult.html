@@ -71,7 +71,12 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">CancelResult</span>
+						<a href="_src_result_.resultstatus.html" class="tsd-signature-type">ResultStatus</a>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">CancelResult</span>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -82,8 +87,7 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_result_.cancelresult.html#cancelled" class="tsd-kind-icon">cancelled</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_src_result_.cancelresult.html#error" class="tsd-kind-icon">error</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite"><a href="_src_result_.cancelresult.html#status" class="tsd-kind-icon">status</a></li>
 							</ul>
 						</section>
 					</div>
@@ -91,23 +95,14 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="cancelled" class="tsd-anchor"></a>
-					<h3>cancelled</h3>
-					<div class="tsd-signature tsd-kind-icon">cancelled<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">true</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite">
+					<a name="status" class="tsd-anchor"></a>
+					<h3>status</h3>
+					<div class="tsd-signature tsd-kind-icon">status<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><a href="../modules/_src_result_.html#result_cancelled" class="tsd-signature-type">RESULT_CANCELLED</a></div>
 					<aside class="tsd-sources">
+						<p>Overrides <a href="_src_result_.resultstatus.html">ResultStatus</a>.<a href="_src_result_.resultstatus.html#status">status</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L10">src/result.ts:10</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="error" class="tsd-anchor"></a>
-					<h3>error</h3>
-					<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/8519067/src/result.ts#L9">src/result.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/3a6c339/src/result.ts#L24">src/result.ts:24</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -131,21 +126,24 @@
 					<li class="current tsd-kind-interface tsd-parent-kind-module">
 						<a href="_src_result_.cancelresult.html" class="tsd-kind-icon">Cancel<wbr>Result</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_src_result_.cancelresult.html#cancelled" class="tsd-kind-icon">cancelled</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_src_result_.cancelresult.html#error" class="tsd-kind-icon">error</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite">
+								<a href="_src_result_.cancelresult.html#status" class="tsd-kind-icon">status</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="_src_result_.failresult.html" class="tsd-kind-icon">Fail<wbr>Result</a>
+						<a href="_src_result_.errorresult.html" class="tsd-kind-icon">Error<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="_src_result_.successresult.html" class="tsd-kind-icon">Success<wbr>Result</a>
+						<a href="_src_result_.okresult.html" class="tsd-kind-icon">Ok<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="_src_result_.resultstatus.html" class="tsd-kind-icon">Result<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="_src_result_.timeoutresult.html" class="tsd-kind-icon">Timeout<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../modules/_src_result_.html#result" class="tsd-kind-icon">Result</a>
@@ -153,14 +151,44 @@
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../modules/_src_result_.html#voidresult" class="tsd-kind-icon">Void<wbr>Result</a>
 					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#message_result_cancelled" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>CANCELLED</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#message_result_timeout" class="tsd-kind-icon">MESSAGE_<wbr>RESULT_<wbr>TIMEOUT</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_cancelled" class="tsd-kind-icon">RESULT_<wbr>CANCELLED</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_error" class="tsd-kind-icon">RESULT_<wbr>ERROR</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_ok" class="tsd-kind-icon">RESULT_<wbr>OK</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#result_timeout" class="tsd-kind-icon">RESULT_<wbr>TIMEOUT</a>
+					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_src_result_.html#cancel" class="tsd-kind-icon">cancel</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/_src_result_.html#cancelled" class="tsd-kind-icon">cancelled</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#error" class="tsd-kind-icon">error</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../modules/_src_result_.html#fail" class="tsd-kind-icon">fail</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
-						<a href="../modules/_src_result_.html#success" class="tsd-kind-icon">success</a>
+						<a href="../modules/_src_result_.html#failed" class="tsd-kind-icon">failed</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#ok" class="tsd-kind-icon">ok</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../modules/_src_result_.html#result-1" class="tsd-kind-icon">result</a>
 					</li>
 				</ul>
 			</nav>
