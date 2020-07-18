@@ -11,3 +11,10 @@ payload in both reading and writing operations. The library avoids using the `Ev
 interface.
 
 TypeScript definitions are included in the library package.
+
+## Error Handling
+
+The library doesn't use exceptions where possible and instead most functions return a `Result` object 
+to pass a return value or error. To make the library more convenient to use in applications that use 
+exception handling, the `result` function is provided to unwrap the return value or throw an exception
+if the result status is not `RESULT_OK`.
