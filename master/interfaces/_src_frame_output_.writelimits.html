@@ -101,12 +101,13 @@
 					<div class="tsd-signature tsd-kind-icon">buffer<wbr>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/6866716/src/frame/output.ts#L21">src/frame/output.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/gdaws/stompit2/blob/b0e32dd/src/frame/output.ts#L22">src/frame/output.ts:22</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The size of the internal buffer used for serialisation.</p>
+							<p>The initial size of the buffer used for frame serialisation. If the frame body is a dynamic size then the
+							buffer is used only for header serialisation and then transport write operation for each body chunk.</p>
 						</div>
 					</div>
 				</section>
