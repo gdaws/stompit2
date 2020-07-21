@@ -16,7 +16,8 @@ const LF = 10;
 export interface WriteLimits {
 
   /**
-   * The size of the internal buffer used for serialisation.
+   * The initial size of the buffer used for frame serialisation. If the frame body is a dynamic size then the
+   * buffer is used only for header serialisation and then transport write operation for each body chunk.
    */
   bufferSize: number;
 };
