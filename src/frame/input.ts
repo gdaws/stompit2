@@ -18,24 +18,24 @@ import {
 export interface ReadLimits {
 
   /**
-   * The maximum number of header lines
+   * The maximum number of header lines allowed in a frame header.
    */
   maxHeaderLines: number;
-  
+
   /**
-   * The maximum line byte length.
+   * The maximum byte length of a header line.
    */
   maxLineLength: number;
-  
+
   /**
-   * The maximum body byte length.
+   * The maximum byte length of a frame body.
    * 
    * For unlimited size set `Infinity` value.
    */
   maxBodyLength: number;
-  
+
   /**
-   * The body chunk byte length.
+   * The maximum byte length of a body chunk read from the transport stream.
    */
   maxBodyChunkLength: number;
 };
