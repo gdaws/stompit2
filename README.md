@@ -27,12 +27,29 @@ npm install stompit2
 3. Send and receive messages
 4. Close session: `session.disconnect()`
 
+Functions:
+
+* [netConnect](https://gdaws.github.io/stompit2/master/modules/_src_transport_netsocketstream_.html#netconnect)
+* [tlsConnect](https://gdaws.github.io/stompit2/master/modules/_src_transport_tlssocketstream_.html#tlsconnect)
+* [wsConnect](https://gdaws.github.io/stompit2/master/modules/_src_transport_websocketstream_.html#wsconnect)
+* [stompConnect](https://gdaws.github.io/stompit2/master/modules/_src_index_.html#stompconnect)
+* [disconnect](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#disconnect)
+
 ### Sending Messages
 
 1. Construct the frame headers: use `FrameHeaders.fromEntries` or `FrameHeaders.fromMap`
 2. Construct a frame body generator: e.g. using a helper function `writeString`, `writeJson` or `writeBuffer` etc
 3. Construct a frame object, referencing the headers and the body: e.g. `{command: 'SEND', headers, body}`
 4. Send the message: `session.send(frame)`
+
+Functions:
+
+* [FrameHeaders.fromEntries](https://gdaws.github.io/stompit2/master/classes/_src_frame_header_.frameheaders.html#fromentries)
+* [FrameHeaders.fromMap](https://gdaws.github.io/stompit2/master/classes/_src_frame_header_.frameheaders.html#frommap)
+* [writeString](https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writestring)
+* [writeJson](https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writejson)
+* [writeBuffer](https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writebuffer)
+* [send](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#send)
 
 ### Receiving Messages
 
@@ -41,6 +58,18 @@ npm install stompit2
 3. Read the message content: e.g. `readString(message.body)` (or use helper function `readJson`)
 4. Once the message is processed send an acknowledgment: `session.ack(message.headers.get('message-id'))`
 5. Goto step 2 or close the subscription (by calling unsubscribe or closing the session)
+
+Functions:
+
+* [subscribe](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#subscribe)
+* [receive](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#receive)
+* [cancelReceive](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#cancelreceive)
+* [readString](https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#readstring)
+* [readJson](https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#readjson)
+* [ack](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#ack)
+* [nack](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#nack)
+* [unsubscribe](https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#unsubscribe)
+* [messageQueue](https://gdaws.github.io/stompit2/master/modules/_src_client_subscription_.html)
 
 Reading the message content from the frame payload must not be deferred if it's to let subsequent frames 
 be received first, as doing so blocks the session and starves other subscriptions. However fully read 
@@ -52,7 +81,7 @@ you need to construct a subscription object using the same details in your SUBSC
 
 To receive from pre-established subscriptions, like for example if you're using Rabbitmq's temp queue 
 destinations, then you don't need to send a subscribe request, instead construct a subscription object with
-the expected properties and call receive. Side note: the library provides a convenient helper function `request`
+the expected properties and call receive. Side note: the library provides a convenient helper function [request](https://gdaws.github.io/stompit2/master/modules/_src_rabbitmq_.html#request)
 in the rabbitmq module to handle the request-response pattern.
 
 A receive operation can be cancelled directly (i.e. `session.cancelReceive(subscription)`) or indirectly
