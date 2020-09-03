@@ -1,10 +1,8 @@
+import { TextDecoder } from 'util';
 import { ok, fail, failed, error, Result } from '../result';
-import { TextEncoding } from '../stream/chunk';
+import { TextEncoding, encodeUtf8String } from '../stream/chunk';
 import { SignalEmitter } from '../concurrency';
 import { FrameBody } from './protocol';
-import { TextEncoder, TextDecoder } from 'util';
-
-const stringEncoder = new TextEncoder();
 
 /**
  * Returns a FrameBody that yields a fail result. This function is useful in FrameBody write functions where an invalid
@@ -56,8 +54,7 @@ export async function* writeBuffer(buffer: Buffer): FrameBody {
  * @param encoding 
  */
 export async function* writeString(value: string): FrameBody {
-  const encoder = new TextEncoder();
-  yield ok(encoder.encode(value));
+  yield ok(encodeUtf8String(value));
 }
 
 /**
