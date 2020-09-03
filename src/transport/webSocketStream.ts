@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 import { Result, ok, fail } from '../result';
 import { Chunk, encodeUtf8String } from '../stream/chunk';
 import { createQueue, Producer } from '../queue';

@@ -1,35 +1,35 @@
 {
+  "private": true,
   "name": "stompit2",
-  "version": "0.10.0",
   "description": "STOMP client library",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "scripts": {
-    "prepublish": "tsc",
-    "build": "tsc",
-    "test": "tsc --noEmit && jest --coverage",
-    "rabbitmq": "node test/broker/rabbitmq/server.js",
-    "activemq": "node test/broker/activemq/server.js"
-  },
   "author": "Graham Daws",
   "license": "MIT",
+  "scripts": {
+    "build": "node runBuildScripts.js",
+    "build:stompit2-node": "tsc --project packages/stompit2-node",
+    "build:stompit2-web": "tsc --project packages/stompit2-web",
+    "test": "tsc --noEmit && jest --coverage",
+    "rabbitmq": "node test/broker/rabbitmq/server.js",
+    "activemq": "node test/broker/activemq/server.js",
+    "publish": "lerna publish"
+  },
   "engines": {
     "node": ">=12.16.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.5",
-    "@babel/preset-env": "^7.10.4",
+    "@babel/core": "^7.11.1",
+    "@babel/preset-env": "^7.11.0",
     "@babel/preset-typescript": "^7.10.4",
     "@types/jest": "^25.2.3",
-    "@types/node": "^12.12.50",
+    "@types/node": "^12.12.54",
     "dotenv": "^8.2.0",
-    "jest": "^25.5.4",
+    "jest": "^26.3.0",
+    "lerna": "^3.22.1",
     "mock-socket": "^9.0.3",
     "ts-node": "^8.10.2",
     "typedoc": "^0.17.8",
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.2"
   },
-  "dependencies": {},
   "jest": {
     "modulePathIgnorePatterns": [
       "<rootDir>/node_modules/",

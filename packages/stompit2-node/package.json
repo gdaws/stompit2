@@ -1,0 +1,16 @@
+{
+  "name": "stompit2-node",
+  "version": "0.10.0",
+  "description": "STOMP client library",
+  "author": "Graham Daws",
+  "license": "MIT",
+  "homepage": "https://github.com/gdaws/stompit2",
+  "module": "dist/packages/stompit2-node/index.js",
+  
+  "engines": {
+    "node": ">=12.16.1"
+  },
+  "files": [
+    "dist/"
+  ]
+}
