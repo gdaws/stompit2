@@ -31,9 +31,7 @@ test('data transfer', async () => {
 
     socket.on('message', data => {
 
-      if (data instanceof Uint8Array) {
-        serverReceivedDataSignal(decodeString(data));
-      }
+      serverReceivedDataSignal(decodeString(data as Uint8Array));
 
       socket.send('hello client');
       socket.send(encodeUtf8String('hello client').buffer);
