@@ -1,4 +1,4 @@
-import { Result, fail, failed } from './result';
+import { Result, failed } from './result';
 import { FrameHeaders } from './frame/header';
 import { Transport } from './transport';
 import { connect as stompConnectImpl } from './client/connect';
