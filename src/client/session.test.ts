@@ -677,7 +677,7 @@ test('disconnect cancels receive', (done) => {
 
     const [messageResult, disconnectError] = result;
 
-    expect(messageResult.status).toBe(RESULT_CANCELLED);
+    expect(messageResult && messageResult.status).toBe(RESULT_CANCELLED);
 
     expect(disconnectError).toBeUndefined();
 
