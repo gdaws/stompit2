@@ -8,6 +8,9 @@ export type ChunkStream = AsyncIterator<Chunk>;
 const allocImpl = Buffer && Buffer.alloc ? Buffer.alloc : (length: number) => new Uint8Array(length);
 const allocUnsafeImpl = Buffer && Buffer.allocUnsafe ? Buffer.allocUnsafe : (length: number) => new Uint8Array(length);
 
+const TextEncoderImpl = TextEncoder;
+const TextDecoderImpl = TextDecoder;
+
 export function alloc(length: number): Chunk {
   return allocImpl(length);
 }
@@ -27,16 +30,16 @@ export function concatPair(first: Chunk, second: Chunk): Chunk {
 }
 
 export async function* streamFromString(value: string): ChunkStream {
-  const encoder = new TextEncoder();
+  const encoder = new TextEncoderImpl();
   yield encoder.encode(value);
 }
 
 export function encodeUtf8String(value: string): Chunk {
-  const encoder = new TextEncoder();
+  const encoder = new TextEncoderImpl();
   return encoder.encode(value);
 }
 
 export function decodeString(chunk: Chunk, encoding: TextEncoding = 'utf-8'): string {
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoderImpl();
   return decoder.decode(chunk);
 }
