@@ -48,7 +48,10 @@ export function fail<ErrorType>(error: ErrorType): ErrorResult<ErrorType> {
   return { status: RESULT_ERROR, error };
 }
 
-export function failed<T, E>(result: Result<T, E>): result is Exclude<Result<T, E>, OkResult<T>> {
+export function failed<T, E>(result: Result<T, E> | undefined): result is Exclude<Result<T, E>, OkResult<T>> {
+  if (!result) {
+    return false;
+  }
   return result.status !== RESULT_OK;
 }
 
