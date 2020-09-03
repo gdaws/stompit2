@@ -1,0 +1,304 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>stompit2</title>
+	<meta name="description" content="Documentation for stompit2">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">stompit2</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>stompit2</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#stompit2" id="stompit2" style="color: inherit; text-decoration: none;">
+					<h1>stompit2</h1>
+				</a>
+				<p><a href="https://travis-ci.org/github/gdaws/stompit2"><img src="https://api.travis-ci.org/gdaws/stompit2.svg?branch=master" alt="travis-ci"></a>
+				<a href="https://codecov.io/gh/gdaws/stompit2"><img src="https://codecov.io/gh/gdaws/stompit2/branch/master/graph/badge.svg" alt="codecov"></a></p>
+				<p>stompit2 is a STOMP client library for Node.js and front-end apps. The most notable feature is the
+					asynchronous pull API for receiving messages. The application controls when it receives the next
+					message and the library returns a Promise for the operation. Similarly payload I/O is driven by
+					the application. Asynchronous iterators of <code>UInt8Array</code> are used to transfer chunks of a frame&#39;s
+					payload in both reading and writing operations. The library avoids using the <code>EventEmitter</code>
+				interface.</p>
+				<p>TypeScript definitions are included in the library package.</p>
+				<a href="#install" id="install" style="color: inherit; text-decoration: none;">
+					<h2>Install</h2>
+				</a>
+				<pre><code class="language-sh">npm install stompit2</code></pre>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h2>Usage</h2>
+				</a>
+				<a href="#client-session-life-cycle" id="client-session-life-cycle" style="color: inherit; text-decoration: none;">
+					<h3>Client Session Life Cycle</h3>
+				</a>
+				<ol>
+					<li>Create a transport connection: call <code>netConnect</code>, <code>tlsConnect</code> or <code>wsConnect</code></li>
+					<li>Establish a STOMP session with the server: call <code>stompConnect</code></li>
+					<li>Send and receive messages</li>
+					<li>Close session: <code>session.disconnect()</code></li>
+				</ol>
+				<p>Functions:</p>
+				<ul>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_transport_netsocketstream_.html#netconnect">netConnect</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_transport_tlssocketstream_.html#tlsconnect">tlsConnect</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_transport_websocketstream_.html#wsconnect">wsConnect</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_index_.html#stompconnect">stompConnect</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#disconnect">disconnect</a></li>
+				</ul>
+				<a href="#sending-messages" id="sending-messages" style="color: inherit; text-decoration: none;">
+					<h3>Sending Messages</h3>
+				</a>
+				<ol>
+					<li>Construct the frame headers: use <code>FrameHeaders.fromEntries</code> or <code>FrameHeaders.fromMap</code></li>
+					<li>Construct a frame body generator: e.g. using a helper function <code>writeString</code>, <code>writeJson</code> or <code>writeBuffer</code> etc</li>
+					<li>Construct a frame object, referencing the headers and the body: e.g. <code>{command: &#39;SEND&#39;, headers, body}</code></li>
+					<li>Send the message: <code>session.send(frame)</code></li>
+				</ol>
+				<p>Functions:</p>
+				<ul>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_frame_header_.frameheaders.html#fromentries">FrameHeaders.fromEntries</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_frame_header_.frameheaders.html#frommap">FrameHeaders.fromMap</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writestring">writeString</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writejson">writeJson</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#writebuffer">writeBuffer</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#send">send</a></li>
+				</ul>
+				<a href="#receiving-messages" id="receiving-messages" style="color: inherit; text-decoration: none;">
+					<h3>Receiving Messages</h3>
+				</a>
+				<ol>
+					<li>Open a subscription: <code>session.subscribe(&#39;/queue/test&#39;, &#39;client-individual&#39;)</code></li>
+					<li>Receive a message: <code>session.receive(subscription)</code></li>
+					<li>Read the message content: e.g. <code>readString(message.body)</code> (or use helper function <code>readJson</code>)</li>
+					<li>Once the message is processed send an acknowledgment: <code>session.ack(message.headers.get(&#39;message-id&#39;))</code></li>
+					<li>Goto step 2 or close the subscription (by calling unsubscribe or closing the session)</li>
+				</ol>
+				<p>Functions:</p>
+				<ul>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#subscribe">subscribe</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#receive">receive</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#cancelreceive">cancelReceive</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#readstring">readString</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_frame_body_.html#readjson">readJson</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#ack">ack</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#nack">nack</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/classes/_src_client_session_.clientsession.html#unsubscribe">unsubscribe</a></li>
+					<li><a href="https://gdaws.github.io/stompit2/master/modules/_src_client_subscription_.html">messageQueue</a></li>
+				</ul>
+				<p>Reading the message content from the frame payload must not be deferred if it&#39;s to let subsequent frames
+					be received first, as doing so blocks the session and starves other subscriptions. However fully read
+				messages can be deferred and pushed into a local queue for later processing.</p>
+				<p>Calling the subscribe method is optional. If your subscribe request requires non-standard headers then you can
+					construct and send your own SUBSCRIBE frame and then be ready to receive messages. To use the receive method,
+				you need to construct a subscription object using the same details in your SUBSCRIBE frame.</p>
+				<p>To receive from pre-established subscriptions, like for example if you&#39;re using Rabbitmq&#39;s temp queue
+					destinations, then you don&#39;t need to send a subscribe request, instead construct a subscription object with
+					the expected properties and call receive. Side note: the library provides a convenient helper function <a href="https://gdaws.github.io/stompit2/master/modules/_src_rabbitmq_.html#request">request</a>
+				in the rabbitmq module to handle the request-response pattern.</p>
+				<p>A receive operation can be cancelled directly (i.e. <code>session.cancelReceive(subscription)</code>) or indirectly
+				by a successful disconnect.</p>
+				<a href="#error-handling" id="error-handling" style="color: inherit; text-decoration: none;">
+					<h2>Error Handling</h2>
+				</a>
+				<p>The library doesn&#39;t use exceptions where possible and instead most functions return a <code>Result</code> object
+					to pass a return value or error. To make the library more convenient to use in applications that use
+					exception handling, the <code>result</code> function is provided to unwrap the return value or throw an exception
+				if the result status is not <code>RESULT_OK</code>.</p>
+				<p>A client session object doesn&#39;t emit events. If any error occurs then the error value is returned from
+				the affected operations.</p>
+				<a href="#transport-limit-defaults" id="transport-limit-defaults" style="color: inherit; text-decoration: none;">
+					<h2>Transport Limit Defaults</h2>
+				</a>
+				<p>It&#39;s a good idea for your application to impose size and time limits on I/O operations, although if you
+					wish, all the limit parameters used by the transport can be effectively disabled. The transport module
+					exports a <code>limitDefaults</code> object and is the default value for the <code>limits</code> parameter of the
+				<code>StandardTransport</code> constructor.</p>
+				<p>STOMP heart-beating is configured with the <code>desiredReadRate</code> and <code>desiredWriteRate</code> properties.</p>
+				<ul>
+					<li><code>limitDefaults.operationTimeout: 3000</code></li>
+					<li><code>limitDefaults.desiredReadRate: 3000</code></li>
+					<li><code>limitDefaults.desiredWriteRate: 0</code></li>
+					<li><code>limitDefaults.delayTolerance: 3000</code></li>
+					<li><code>limitDefaults.readLimits.maxHeaderLines: 128</code></li>
+					<li><code>limitDefaults.readLimits.maxLineLength: 8000</code></li>
+					<li><code>limitDefaults.readLimits.maxBodyLength: Infinity</code></li>
+					<li><code>limitDefaults.readLimits.maxBodyChunkLength: 16384</code></li>
+					<li><code>limitDefaults.writeLimits.bufferSize: 16384</code></li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_packages_stompit2_node_index_.html">&quot;packages/stompit2-<wbr>node/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_packages_stompit2_web_index_.html">&quot;packages/stompit2-<wbr>web/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_client_connect_.html">&quot;src/client/connect&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_client_message_.html">&quot;src/client/message&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_client_receipt_.html">&quot;src/client/receipt&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_client_session_.html">&quot;src/client/session&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_client_subscription_.html">&quot;src/client/subscription&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_frame_body_.html">&quot;src/frame/body&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_frame_header_.html">&quot;src/frame/header&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_frame_input_.html">&quot;src/frame/input&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_frame_output_.html">&quot;src/frame/output&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_frame_protocol_.html">&quot;src/frame/protocol&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_index_.html">&quot;src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_queue_.html">&quot;src/queue&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_rabbitmq_.html">&quot;src/rabbitmq&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_result_.html">&quot;src/result&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_stream_chunk_.html">&quot;src/stream/chunk&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_stream_reader_.html">&quot;src/stream/reader&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_stream_writer_.html">&quot;src/stream/writer&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_transport_.html">&quot;src/transport&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_transport_netsocketstream_.html">&quot;src/transport/net<wbr>Socket<wbr>Stream&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_transport_tlssocketstream_.html">&quot;src/transport/tls<wbr>Socket<wbr>Stream&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_src_transport_websocketstream_.html">&quot;src/transport/web<wbr>Socket<wbr>Stream&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_test_client_lib_app_utils_.html">&quot;test/client/lib/app_<wbr>utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_test_client_speedtest_.html">&quot;test/client/speedtest&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_test_config_utils_.html">&quot;test/config_<wbr>utils&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
