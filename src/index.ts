@@ -4,7 +4,13 @@ import { Transport } from './transport';
 import { connect as stompConnectImpl } from './client/connect';
 import { ClientSession } from './client/session';
 
+export { Result, failed, error, result, fail, ok } from './result';
+
+export { ClientSession } from './client/session';
+export { messageQueue } from './client/subscription';
 export { jsonMessage } from './client/message';
+
+export { readString, readJson } from './frame/body';
 
 /**
  * Establish a STOMP session with the server over a transport
