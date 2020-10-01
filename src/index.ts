@@ -10,6 +10,7 @@ export { ClientSession } from './client/session';
 export { messageQueue } from './client/subscription';
 export { jsonMessage } from './client/message';
 
+export { FrameHeaders } from './frame/header';
 export { readString, readJson } from './frame/body';
 
 /**
