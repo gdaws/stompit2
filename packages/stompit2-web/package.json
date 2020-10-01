@@ -1,6 +1,6 @@
 {
   "name": "stompit2-web",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "STOMP client library",
   "author": "Graham Daws",
   "license": "MIT",
