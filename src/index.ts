@@ -11,7 +11,17 @@ export { messageQueue } from './client/subscription';
 export { jsonMessage } from './client/message';
 
 export { FrameHeaders } from './frame/header';
-export { readString, readJson } from './frame/body';
+export { FrameBodyChunk } from './frame/protocol';
+
+export { 
+  readString, 
+  readJson, 
+  writeBuffer, 
+  writeEmptyBody, 
+  writeError, 
+  writeJson, 
+  writeString 
+} from './frame/body';
 
 /**
  * Establish a STOMP session with the server over a transport
