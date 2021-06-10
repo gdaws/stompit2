@@ -7,7 +7,7 @@
   "homepage": "https://github.com/gdaws/stompit2",
   "main": "dist/packages/stompit2-node/index.js",
   "engines": {
-    "node": ">=12.16.1"
+    "node": ">=14.17.0"
   },
   "files": [
     "dist/"
