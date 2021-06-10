@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { VoidResult, failed, error } from '../../../src/result';
 import { netConnect } from '../../../src/transport/netSocketStream';
+import { TransportLimits, limitDefaults } from '../../../src/transport';
 import { connect } from '../../../src/client/connect';
 import { ClientSession } from '../../../src/client/session';
 import { FrameHeaders } from '../../../src/frame/header';
@@ -17,7 +18,10 @@ export function getConnectionConfig(): Config | undefined {
     const client = require(`../../broker/${path.basename(broker)}/client`);
      
     if (client && client.getConnectionConfig) {
-      return client.getConnectionConfig();
+      return {
+        moduleName: broker,
+        ...client.getConnectionConfig()
+      };
     }
   }
   catch(error) {
@@ -46,10 +50,17 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     return handleError('Config not found: BROKER env unset or the broker service is not running');
   }
 
+  const transportLimits = {...limitDefaults};
+
+  if ('activemq' === config.moduleName) {
+    transportLimits.desiredReadRate = 0;
+    transportLimits.desiredWriteRate = 0;
+  }
+
   const tcpConnectResult = await netConnect({
     host: config.host,
     port: config.port
-  });
+  }, transportLimits);
 
   const endpoint = [config.host, config.port].join(':');
 
