@@ -14,9 +14,25 @@ TypeScript definitions are included in the library package.
 
 ## Install
 
+There is a separate package for each supported runtime environment.
+
+To use the library in a Node.js app install package:
+
 ```sh
-npm install stompit2
+npm install stompit2-node
 ```
+
+Requires Node version >=14.17.0. The package is compiled from Typescript and targeted for Node 14. 
+The library does support earlier versions of Node but I choose not to distribute multiple optimised 
+packages.
+
+To use the library in a web browser install package:
+
+```sh
+npm install stompit2-web
+```
+
+Compiled to ES6 code and as ES6 modules.
 
 ## Usage
 
