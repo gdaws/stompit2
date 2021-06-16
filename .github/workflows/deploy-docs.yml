@@ -18,6 +18,8 @@ jobs:
         run: |
           npm install
           npx typedoc --out docs/${GITHUB_REF##*/}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v3
