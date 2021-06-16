@@ -6,7 +6,7 @@
   "author": "Graham Daws",
   "license": "MIT",
   "homepage": "https://github.com/gdaws/stompit2",
-  "main": "dist/packages/stompit2-node/index.js",
+  "main": "packages/stompit2-node/index.js",
   "engines": {
     "node": ">=14.17.0"
   },

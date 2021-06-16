@@ -5,9 +5,6 @@
   "author": "Graham Daws",
   "license": "MIT",
   "scripts": {
-    "build": "node runBuildScripts.js",
-    "build:stompit2-node": "tsc --project packages/stompit2-node",
-    "build:stompit2-web": "tsc --project packages/stompit2-web",
     "test": "tsc --noEmit && jest --coverage",
     "rabbitmq": "node test/broker/rabbitmq/server.js",
     "activemq": "node test/broker/activemq/server.js"
