@@ -10,6 +10,8 @@ before_install:
 install:
   - npm install
   - npm install codecov -g
+before_script:
+  - make
 script:
   - npm test
 after_success:
@@ -28,3 +30,8 @@ jobs:
         - npm run activemq start
       script:
         - BROKER=activemq npx ts-node test/client/speedtest.ts
+deploy:
+  provider: script
+  script: "npm publish dist/stompit2-node && npm publish dist/stompit2-web"
+  on:
+    tags: true
