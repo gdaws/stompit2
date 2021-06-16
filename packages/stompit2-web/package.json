@@ -1,8 +1,14 @@
 {
   "name": "stompit2-web",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "STOMP client library",
-  "keywords": ["stomp", "websocket", "queue", "rabbitmq", "activemq"],
+  "keywords": [
+    "stomp",
+    "websocket",
+    "queue",
+    "rabbitmq",
+    "activemq"
+  ],
   "author": "Graham Daws",
   "license": "MIT",
   "homepage": "https://github.com/gdaws/stompit2",
