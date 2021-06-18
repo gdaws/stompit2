@@ -23,8 +23,6 @@ jobs:
 
       - name: Extract branch name
         uses: FranzDiebold/github-env-vars-action@v1.2.0
-        run: |
-          echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v3
