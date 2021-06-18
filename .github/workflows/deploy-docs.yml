@@ -21,10 +21,15 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Extract branch name
+        uses: FranzDiebold/github-env-vars-action@v1.2.0
+        run: |
+          echo "GITHUB_REF_NAME_SLUG=$GITHUB_REF_NAME_SLUG"
+
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
           FOLDER: docs # The folder the action should deploy.
-          TARGET_FOLDER: ${GITHUB_REF##*/}
+          TARGET_FOLDER: ${{ env.GITHUB_REF_NAME_SLUG }}
