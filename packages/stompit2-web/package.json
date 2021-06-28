@@ -15,8 +15,5 @@
   "module": "packages/stompit2-web/index.js",
   "engines": {
     "node": ">=12.16.1"
-  },
-  "files": [
-    "dist/"
-  ]
+  }
 }
