@@ -19,7 +19,8 @@ after_success:
   - codecov
 jobs:
   include:
-    - name: RabbitMQ speed test
+    - stage: Tests
+      name: RabbitMQ speed test
       before_script:
         - npm run rabbitmq build
         - npm run rabbitmq start
@@ -31,9 +32,12 @@ jobs:
         - npm run activemq start
       script:
         - BROKER=activemq npx ts-node test/client/speedtest.ts
-deploy:
-  provider: script
-  skip_cleanup: true
-  script: make publish
-  on:
-    tags: true
+    - stage: Deployment
+      name: npm publish
+      script: skip
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script: make publish
+        on:
+          tags: true
