@@ -16,3 +16,7 @@ $(PACKAGES):
 .PHONY: clean
 clean:
 	rm -rf $(DIST_DIR)
+
+.PHONY: docs
+docs:
+	npx typedoc
