@@ -20,3 +20,8 @@ clean:
 .PHONY: docs
 docs:
 	npx typedoc
+
+.PHONY: publish
+publish:
+	npm publish dist/stompit2-node
+	npm publish dist/stompit2-web

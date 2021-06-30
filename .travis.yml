@@ -7,6 +7,7 @@ services:
   - docker
 before_install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - npm set //registry.npmjs.org/:_authToken $NPM_TOKEN
 install:
   - npm install
   - npm install codecov -g
@@ -32,6 +33,7 @@ jobs:
         - BROKER=activemq npx ts-node test/client/speedtest.ts
 deploy:
   provider: script
-  script: "npm publish dist/stompit2-node && npm publish dist/stompit2-web"
+  skip_cleanup: true
+  script: make publish
   on:
     tags: true
