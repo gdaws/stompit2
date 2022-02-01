@@ -64,6 +64,6 @@ test('stompConnect', async () => {
   expect(connectFrame.command).toBe('CONNECT');
   expect(connectFrame.headers.get('accept-version')).toBe(acceptedVersions().join(','));
   expect(connectFrame.headers.get('host')).toBe('/');
-  expect(connectFrame.headers.get('username')).toBe('guest');
+  expect(connectFrame.headers.get('login')).toBe('guest');
   expect(connectFrame.headers.get('passcode')).toBe('password');
 });

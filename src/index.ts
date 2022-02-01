@@ -43,7 +43,7 @@ export async function stompConnect(transportConnect: Promise<Result<Transport>>,
 
   return stompConnectImpl(transport, FrameHeaders.fromEntries([
     ['host', hostHeader],
-    ['username', username],
+    ['login', username],
     ['passcode', password]
   ]));
 }

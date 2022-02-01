@@ -1,6 +1,6 @@
 {
   "name": "stompit2-web",
-  "version": "0.14.5",
+  "version": "0.14.6",
   "description": "STOMP client library",
   "keywords": [
     "stomp",
