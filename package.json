@@ -5,7 +5,7 @@
   "author": "Graham Daws",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint src --quiet",
+    "lint": "eslint src test --quiet",
     "test": "tsc --noEmit && jest --coverage",
     "rabbitmq": "node test/broker/rabbitmq/server.js",
     "activemq": "node test/broker/activemq/server.js",

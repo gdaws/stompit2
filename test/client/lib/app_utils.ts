@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { VoidResult, failed, error } from '../../../src/result';
 import { netConnect } from '../../../src/transport/netSocketStream';
-import { TransportLimits, limitDefaults } from '../../../src/transport';
+import { limitDefaults } from '../../../src/transport';
 import { connect } from '../../../src/client/connect';
 import { ClientSession } from '../../../src/client/session';
 import { FrameHeaders } from '../../../src/frame/header';
@@ -11,12 +11,12 @@ type LogFunction = (...args: any[]) => void;
 type SessionHandler = (session: ClientSession, log: LogFunction) => Promise<void>;
 
 export function getConnectionConfig(): Config | undefined {
-
   const broker = process.env.BROKER || '';
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const client = require(`../../broker/${path.basename(broker)}/client`);
-     
+
     if (client && client.getConnectionConfig) {
       return {
         moduleName: broker,
@@ -24,7 +24,7 @@ export function getConnectionConfig(): Config | undefined {
       };
     }
   }
-  catch(error) {
+  catch (error) {
     return;
   }
 }
@@ -36,7 +36,6 @@ export function logger(name: string): LogFunction {
 }
 
 export async function session(name: string, handler: SessionHandler): Promise<VoidResult> {
-
   const log = logger(name);
 
   const handleError = (message: string): Error => {
@@ -50,7 +49,7 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     return handleError('Config not found: BROKER env unset or the broker service is not running');
   }
 
-  const transportLimits = {...limitDefaults};
+  const transportLimits = { ...limitDefaults };
 
   if ('activemq' === config.moduleName) {
     transportLimits.desiredReadRate = 0;
@@ -86,17 +85,15 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     await handler(session, log);
   }
   catch (error) {
-
     const disconnectError = session.getDisconnectError();
 
-    log(`Handler aborted: ${disconnectError ? disconnectError.message : error.message}`);
+    log(`Handler aborted: ${disconnectError ? disconnectError.message : (error as Error).message}`);
 
     session.shutdown();
-    return error;
+    return error as Error;
   }
 
   if (!session.isDisconnected()) {
-    
     const disconnectError = await session.disconnect();
 
     if (disconnectError) {

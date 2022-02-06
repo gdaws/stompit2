@@ -8,13 +8,12 @@ function sleep(ms: number) {
 }
 
 async function speedtest() {
-
   const log = logger('Supervisor');
 
   const duration = 5000;
   const bodySize = 128;
   const queueName = '/queue/speedtest';
- 
+
   const messageBody = Buffer.alloc(bodySize);
 
   let running = true;
@@ -23,13 +22,11 @@ async function speedtest() {
   let received = 0;
 
   const start = process.hrtime.bigint();
-  
-  const producer = session('Producer', async (session, log) => {
 
+  const producer = session('Producer', async (session, log) => {
     while (running) {
-     
       const message = {
-        command: 'SEND', 
+        command: 'SEND',
         headers: new FrameHeaders([
           ['Destination', queueName],
           ['Content-length', '' + bodySize]
@@ -48,7 +45,6 @@ async function speedtest() {
   });
 
   const consumer = session('Consumer', async (session, log) => {
-
     const subscription = result(await session.subscribe(queueName));
 
     (async () => {
@@ -57,9 +53,8 @@ async function speedtest() {
     })();
 
     while (true) {
-
       const receiveResult = await session.receive(subscription);
-      
+
       if (receiveResult.status !== RESULT_OK) {
         if (receiveResult.status === RESULT_CANCELLED) {
           break;
@@ -97,7 +92,6 @@ async function speedtest() {
   log(`Consumer message rate: ${Math.round(received / elapsed * 1000)}/s`);
 
   if (producerError || consumerError) {
-
     if (producerError) {
       log('Producer session failed to complete');
     }

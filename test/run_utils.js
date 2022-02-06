@@ -1,7 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { spawnSync, spawn } = require('child_process');
 
 function run(command, args) {
-
   const result = spawnSync(command, args, {
     shell: true
   });
@@ -23,11 +23,11 @@ function getOutput(content) {
   if (content instanceof Buffer) {
     return content.toString();
   }
+
   return content;
 }
 
 function inspectContainer(name) {
-
   try {
     const list = JSON.parse(run('docker', ['container', 'inspect', name]));
     if (Array.isArray(list)) {
@@ -35,13 +35,16 @@ function inspectContainer(name) {
     }
     else return;
   }
-  catch(error) {
+  catch (error) {
     return;
   }
 }
 
 function removeContainer(name) {
-  try { run('docker', ['container', 'rm', '-f', name]); } catch (error) {}
+  try {
+    run('docker', ['container', 'rm', '-f', name]);
+  }
+  catch (error) { }
 }
 
 function stopContainer(name) {
@@ -49,17 +52,14 @@ function stopContainer(name) {
 }
 
 function waitContainerOutput(containerName, pattern, timeout) {
-
   return new Promise((resolve, reject) => {
-
-    const logViewerProcess = spawn('docker', ['logs', '--follow', containerName], {shell: true});
+    const logViewerProcess = spawn('docker', ['logs', '--follow', containerName], { shell: true });
 
     let output = '';
     let finished = false;
     let timer;
-  
-    const finish = (value) => {
 
+    const finish = (value) => {
       if (finished) {
         return;
       }
@@ -87,7 +87,6 @@ function waitContainerOutput(containerName, pattern, timeout) {
     }
 
     const matchOutput = () => {
-      
       const value = output.match(pattern);
 
       if (null === value) {
@@ -104,6 +103,7 @@ function waitContainerOutput(containerName, pattern, timeout) {
       else {
         output = output + chunk;
       }
+
       matchOutput();
     });
 
@@ -114,7 +114,6 @@ function waitContainerOutput(containerName, pattern, timeout) {
 }
 
 function main(availableCommands) {
-
   const commandName = process.argv[2] || 'defaultCommand';
 
   const commandFunction = availableCommands[commandName];
@@ -129,7 +128,7 @@ function main(availableCommands) {
       await commandFunction();
       process.exit(0);
     }
-    catch(error) {
+    catch (error) {
       process.stderr.write(error.message);
       process.exit(1);
     }

@@ -47,9 +47,9 @@ export class NetSocketStream implements TransportStream {
   }
 
   public writeEnd(): Promise<VoidResult> {
-    return new Promise((resolve) => {
+    return new Promise<VoidResult>((resolve) => {
       this.socket.end(() => {
-        resolve();
+        resolve(void 0);
       });
     });
   }

@@ -8,4 +8,4 @@ export interface Config {
     login: string;
     passcode: string;
   };
-};
+}

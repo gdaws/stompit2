@@ -1,44 +1,43 @@
-const { 
-  run, 
+const {
+  run,
   removeContainer,
-  stopContainer, 
+  stopContainer,
   inspectContainer,
   waitContainerOutput,
   main
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require('../../run_utils');
 
-const { 
-  imageName, 
+const {
+  imageName,
   containerName,
   buildPath,
   webAdminPort,
   connectHeaders
-} = require('./config'); 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require('./config');
 
 const build = () => run('docker', ['build', '-t', imageName, buildPath]);
 
 const cleanup = () => {
-
   try {
     run('docker', ['container', 'stop', containerName]);
     console.log('Stopped container');
   }
-  catch(error) {}
-  
+  catch (error) { }
+
   try {
     run('docker', ['container', 'rm', containerName]);
     console.log('Removed container');
   }
-  catch(error) {}
+  catch (error) { }
 };
 
 const start = async () => {
-
   const container = inspectContainer(containerName);
-      
-  if (container) {
 
-    if(container.State.Running) {
+  if (container) {
+    if (container.State.Running) {
       console.warn('Restarting server');
     }
 
@@ -65,7 +64,6 @@ const start = async () => {
 const stop = () => stopContainer(containerName);
 
 const info = () => {
-
   console.log(`Management Url: http://localhost:${webAdminPort}/`);
 
   console.log(`Username: ${connectHeaders.login}`);
@@ -74,9 +72,9 @@ const info = () => {
 
 main({
   build,
-  cleanup, 
-  start, 
-  stop, 
-  info, 
+  cleanup,
+  start,
+  stop,
+  info,
   defaultCommand: start
 });

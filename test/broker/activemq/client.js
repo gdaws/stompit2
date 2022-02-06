@@ -2,10 +2,10 @@
 const {
   stompPort,
   connectHeaders
-} = require('./config'); 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+} = require('./config');
 
 function getConnectionConfig() {
-
   return {
     host: 'localhost',
     port: stompPort,
