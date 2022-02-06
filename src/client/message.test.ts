@@ -1,9 +1,9 @@
 import { result, ok, fail } from '../result';
 import { FrameHeaders } from '../frame/header';
 import { readString, writeString } from '../frame/body';
-import { Queue, Producer, Consumer, createQueue } from '../queue';
+import { Producer, Consumer, createQueue } from '../queue';
 import { RECEIPT_DEFAULT_TIMEOUT } from './receipt';
-import { Receivable, AckSendable, MessageResult, Subscription, SendResult } from './session';
+import { Receivable, AckSendable, MessageResult, SendResult } from './session';
 import { jsonMessage, discardMessages } from './message';
 
 test('jsonMessage', async () => {
@@ -27,14 +27,14 @@ class DiscardMessagesMockSession implements Receivable, AckSendable {
 
   public inputProducer: Producer<MessageResult>;
 
-  public acks: {command: 'ack' | 'nack', messageId: string, transactionId: string | undefined, receiptTimeout: number}[];
+  public acks: { command: 'ack' | 'nack', messageId: string, transactionId: string | undefined, receiptTimeout: number }[];
 
   public constructor() {
     [this.inputProducer, this.inputConsumer] = createQueue();
     this.acks = [];
   }
 
-  async receive(subscription: Subscription): Promise<MessageResult> {
+  async receive(): Promise<MessageResult> {
     const iterator = this.inputConsumer[Symbol.asyncIterator]();
 
     const result = await iterator.next();
@@ -68,11 +68,13 @@ test('discardMessages', async () => {
     })
   };
 
-  const message = (id: string) => ({ command: 'MESSAGE', headers: FrameHeaders.fromMap({
-    'subscription': '1',
-    'destination': '/queue/test',
-    'message-id': id
-  }), body: writeString(id) });
+  const message = (id: string) => ({
+    command: 'MESSAGE', headers: FrameHeaders.fromMap({
+      'subscription': '1',
+      'destination': '/queue/test',
+      'message-id': id
+    }), body: writeString(id)
+  });
 
   const finishDiscardingMessages = discardMessages('ack', subscription, session);
 

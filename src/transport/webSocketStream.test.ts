@@ -1,6 +1,6 @@
 import { WebSocket, Server } from 'mock-socket';
 import { createSignal } from '../concurrency';
-import { result, failed, error } from '../result';
+import { result, failed } from '../result';
 import { encodeUtf8String, decodeString } from '../stream/chunk';
 import { WebSocketStream, wsConnect } from './webSocketStream';
 
@@ -114,7 +114,7 @@ test('wsConnect', async () => {
 
 test('wsConnect error', async () => {
   class MockFailWebSocket extends WebSocket {
-    constructor(url: string) {
+    constructor(url: string | URL, _protocols?: string | string[] | undefined) {
       super(url);
       throw new Error('could not connect');
     }

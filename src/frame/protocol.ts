@@ -12,7 +12,7 @@ export type ProtocolVersion =
   typeof STOMP_VERSION_10 |
   typeof STOMP_VERSION_11 |
   typeof STOMP_VERSION_12
-;
+  ;
 
 export function acceptedVersions(): ProtocolVersion[] {
   return [
@@ -75,7 +75,7 @@ export interface Frame {
 
 export type AckMode = 'auto' | 'client' | 'client-individual';
 
-export function acceptedAckModes(protocolVersion: ProtocolVersion): AckMode[] {
+export function acceptedAckModes(_protocolVersion: ProtocolVersion): AckMode[] {
   return [
     'auto',
     'client',

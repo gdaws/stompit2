@@ -175,32 +175,32 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
 
 function encodeEscapeSequence(value: string) {
   switch (value) {
-  case '\r':
-    return '\\r';
+    case '\r':
+      return '\\r';
 
-  case '\n':
-    return '\\n';
+    case '\n':
+      return '\\n';
 
-  case ':':
-    return '\\c';
+    case ':':
+      return '\\c';
 
-  case '\\':
-    return '\\\\';
+    case '\\':
+      return '\\\\';
 
-  default:
-    return value;
+    default:
+      return value;
   }
 }
 
 function encodeValue(decoded: string, params: WriteParameters): Result<string> {
   switch (params.protocolVersion) {
-  case STOMP_VERSION_10:
-    return ok(decoded);
+    case STOMP_VERSION_10:
+      return ok(decoded);
 
-  case STOMP_VERSION_11:
-    return ok(decoded.replace(/\n|:|\\|/g, encodeEscapeSequence));
+    case STOMP_VERSION_11:
+      return ok(decoded.replace(/\n|:|\\|/g, encodeEscapeSequence));
 
-  case STOMP_VERSION_12:
-    return ok(decoded.replace(/\r|\n|:|\\|/g, encodeEscapeSequence));
+    case STOMP_VERSION_12:
+      return ok(decoded.replace(/\r|\n|:|\\|/g, encodeEscapeSequence));
   }
 }

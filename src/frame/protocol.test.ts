@@ -17,7 +17,7 @@ test('supportedProtocolVersion', () => {
 });
 
 test('acceptedAckModes', () => {
-  const ackModes = acceptedAckModes('1.0');
+  acceptedAckModes('1.0');
 
   expect(acceptedAckModes('1.0')).toEqual(['auto', 'client', 'client-individual']);
   expect(acceptedAckModes('1.1')).toEqual(['auto', 'client', 'client-individual']);

@@ -29,7 +29,7 @@ export async function connect(transport: Transport, headers: FrameHeaders): Prom
   const connectFrame: Frame = {
     command: 'CONNECT',
     headers: FrameHeaders.merge(headers, FrameHeaders.fromEntries([
-      ['accept-version',  acceptedVersions().join(',')]
+      ['accept-version', acceptedVersions().join(',')]
     ])),
     body: writeEmptyBody()
   };

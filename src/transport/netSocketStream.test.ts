@@ -1,6 +1,6 @@
 import { createServer, Socket } from 'net';
 import * as net from 'net';
-import { failed, error, result } from '../result';
+import { failed, result } from '../result';
 import { encodeUtf8String, decodeString } from '../stream/chunk';
 import { createSignal } from '../concurrency';
 import { NetSocketStream, netConnect } from './netSocketStream';
@@ -9,9 +9,9 @@ let serverClientSocket: Promise<Socket> | undefined;
 
 const serverListeningSocket = createServer();
 
-const listening = new Promise((resolve, reject) => {
+const listening = new Promise<void>((resolve, reject) => {
   serverListeningSocket.on('error', reject);
-  serverListeningSocket.listen(0, '0.0.0.0', resolve);
+  serverListeningSocket.listen(0, '0.0.0.0', 5, resolve);
 });
 
 const prepareServer = () => {
@@ -33,7 +33,7 @@ const prepareServer = () => {
   });
 };
 
-function getConnectOptions(): {port: number, host: string} {
+function getConnectOptions(): { port: number, host: string } {
   const serverAddress = serverListeningSocket.address();
 
   if (null === serverAddress) {

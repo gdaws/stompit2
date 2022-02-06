@@ -68,7 +68,12 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
     decoder = new TextDecoder(encoding);
   }
   catch (error) {
-    return fail(error);
+    if (error instanceof Error) {
+      return fail(error);
+    }
+    else {
+      return fail(new Error('TextDecoder object instantiation error'));
+    }
   }
 
   let result = '';
@@ -82,7 +87,12 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
       result = result + decoder.decode(chunkResult.value, { stream: true });
     }
     catch (decodeError) {
-      return fail(decodeError);
+      if (decodeError instanceof Error) {
+        return fail(decodeError);
+      }
+      else {
+        return fail(new Error('text decode error'));
+      }
     }
   }
 
@@ -90,7 +100,12 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
     result = result + decoder.decode();
   }
   catch (decodeError) {
-    return fail(decodeError);
+    if (decodeError instanceof Error) {
+      return fail(decodeError);
+    }
+    else {
+      return fail(new Error('text decode error'));
+    }
   }
 
   return ok(result);
@@ -101,12 +116,18 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
  *
  * @param value
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function writeJson(value: any): FrameBody {
   try {
     return writeString(JSON.stringify(value));
   }
   catch (error) {
-    return writeError(error);
+    if (error instanceof Error) {
+      return writeError(error);
+    }
+    else {
+      return writeError(new Error('json serialize error'));
+    }
   }
 }
 
@@ -117,6 +138,7 @@ export function writeJson(value: any): FrameBody {
  * @param encoding The character encoding of the frame body content
  * @return The parsed JSON value
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'): Promise<Result<any>> {
   const string = await readString(body, encoding);
 
@@ -129,7 +151,12 @@ export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'
     return ok(value);
   }
   catch (jsonParseError) {
-    return fail(jsonParseError);
+    if (jsonParseError instanceof Error) {
+      return fail(jsonParseError);
+    }
+    else {
+      return fail(new Error('json parse error'));
+    }
   }
 }
 

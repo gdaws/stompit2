@@ -1,4 +1,4 @@
-import { Result, failed, result, ok } from './result';
+import { Result, result, ok } from './result';
 import { Frame, ProtocolVersion, STOMP_VERSION_10, acceptedVersions } from './frame/protocol';
 import { FrameHeaders } from './frame/header';
 import { writeEmptyBody } from './frame/body';
@@ -11,15 +11,15 @@ class MockTransport implements Transport {
   public writtenFrame: [Frame, ProtocolVersion] | undefined;
   public closed: boolean;
 
-  public constructor(){
+  public constructor() {
     this.closed = false;
   }
 
-  getReceiptTimeout(frame: Frame) {
+  getReceiptTimeout() {
     return RECEIPT_NOT_REQUESTED;
   }
 
-  readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
+  readFrame(_protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
     return Promise.resolve(ok({
       command: 'CONNECTED',
       headers: FrameHeaders.fromEntries([

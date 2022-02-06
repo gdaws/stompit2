@@ -249,29 +249,29 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 
 function decodeEscapeSequence(escapeSequence: string) {
   switch (escapeSequence) {
-  case '\\r':
-    return '\r';
-  case '\\n':
-    return '\n';
-  case '\\c':
-    return ':';
-  case '\\\\':
-    return '\\';
-  default:
+    case '\\r':
+      return '\r';
+    case '\\n':
+      return '\n';
+    case '\\c':
+      return ':';
+    case '\\\\':
+      return '\\';
+    default:
     /* istanbul ignore next */
-    return escapeSequence;
+      return escapeSequence;
   }
 }
 
 function decodeValue(encoded: string, params: ReadParameters): Result<string> {
   switch (params.protocolVersion) {
-  case STOMP_VERSION_10:
-    return ok(encoded);
+    case STOMP_VERSION_10:
+      return ok(encoded);
 
-  case STOMP_VERSION_11:
-    return ok(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
+    case STOMP_VERSION_11:
+      return ok(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
 
-  case STOMP_VERSION_12:
-    return ok(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
+    case STOMP_VERSION_12:
+      return ok(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
   }
 }

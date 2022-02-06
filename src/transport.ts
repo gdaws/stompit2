@@ -210,7 +210,7 @@ export class StandardTransport implements Transport {
     if (!this.sessionStarted) {
       const frame = result.value;
 
-      if('CONNECTED' === frame.command) {
+      if ('CONNECTED' === frame.command) {
         this.sessionStarted = true;
 
         const heartbeat = this.startHeartBeat(frame.headers);
@@ -238,51 +238,51 @@ export class StandardTransport implements Transport {
     };
 
     switch (frame.command) {
-    case 'CONNECT': {
-      if (this.sessionStarted) {
-        return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+      case 'CONNECT': {
+        if (this.sessionStarted) {
+          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+        }
+
+        if (frame.headers.has('heart-beat')) {
+          frame.headers = frame.headers.filter(([name, _value]) => 'heart-beat' === name);
+        }
+
+        const writeRate = this.limits.desiredWriteRate;
+        const readRate = this.limits.desiredReadRate;
+
+        if (writeRate > 0 || readRate > 0) {
+          frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
+            ['heart-beat', [
+              Math.max(0, writeRate).toFixed(),
+              Math.max(0, readRate).toFixed()
+            ].join(',')]
+          ]));
+        }
+
+        break;
       }
 
-      if (frame.headers.has('heart-beat')) {
-        frame.headers = frame.headers.filter(([name, _value]) => 'heart-beat' === name);
-      }
+      case 'CONNECTED': {
+        if (this.sessionStarted) {
+          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+        }
 
-      const writeRate = this.limits.desiredWriteRate;
-      const readRate = this.limits.desiredReadRate;
+        this.sessionStarted = true;
 
-      if (writeRate > 0 || readRate > 0) {
+        const heartbeat = this.startHeartBeat(frame.headers, false);
+
+        if (failed(heartbeat)) {
+          return this.failStream(error(heartbeat)).error;
+        }
+
+        const [sendRate, recvRate] = heartbeat.value;
+
         frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
-          ['heart-beat', [
-            Math.max(0, writeRate).toFixed(),
-            Math.max(0, readRate).toFixed()
-          ].join(',')]
+          ['heart-beat', `${sendRate},${recvRate}`]
         ]));
+
+        break;
       }
-
-      break;
-    }
-
-    case 'CONNECTED': {
-      if (this.sessionStarted) {
-        return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
-      }
-
-      this.sessionStarted = true;
-
-      const heartbeat = this.startHeartBeat(frame.headers, false);
-
-      if (failed(heartbeat)) {
-        return this.failStream(error(heartbeat)).error;
-      }
-
-      const [sendRate, recvRate] = heartbeat.value;
-
-      frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
-        ['heart-beat', `${sendRate},${recvRate}`]
-      ]));
-
-      break;
-    }
     }
 
     this.writing = true;

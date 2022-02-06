@@ -38,7 +38,7 @@ export function encodeUtf8String(value: string): Chunk {
   return encoder.encode(value);
 }
 
-export function decodeString(chunk: Chunk, encoding: TextEncoding = 'utf-8'): string {
+export function decodeString(chunk: Chunk, _encoding: TextEncoding = 'utf-8'): string {
   const decoder = new TextDecoderImpl();
   return decoder.decode(chunk);
 }

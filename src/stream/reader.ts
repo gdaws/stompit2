@@ -40,11 +40,6 @@ type ReadOperation = (buffer: Chunk) => ReadContinued | ReadCompleted | ReadErro
 
 export type ReadResult = Result<Chunk>;
 
-interface ReadCompletion {
-  resolve: (chunk: ReadResult) => void;
-  reject: (any: any) => void;
-}
-
 export class Reader {
   private stream: ChunkStream;
 
@@ -109,13 +104,13 @@ export class Reader {
     );
   }
 
-  public readUntil(magicByte: number, maxReadLength: number): Promise<ReadResult>  {
+  public readUntil(magicByte: number, maxReadLength: number): Promise<ReadResult> {
     let index = 0;
 
     return this.run((buffer) => {
       const end = Math.min(buffer.length, maxReadLength);
 
-      for(; index < end; index++) {
+      for (; index < end; index++) {
         if (buffer[index] === magicByte) {
           return completed(index + 1, 0);
         }
@@ -157,32 +152,37 @@ export class Reader {
         }
       }
       catch (error) {
-        return fail(error);
+        if (error instanceof Error) {
+          return fail(error);
+        }
+        else {
+          throw new Error('');
+        }
       }
     }
 
     const result = operation(this.buffer);
 
     switch (result.status) {
-    case ReadStatus.Continued: {
-      if (streamEnded) {
-        return fail(new Error('unexpected end of stream'));
+      case ReadStatus.Continued: {
+        if (streamEnded) {
+          return fail(new Error('unexpected end of stream'));
+        }
+
+        return this.runProper(operation, true);
       }
 
-      return this.runProper(operation, true);
-    }
+      case ReadStatus.Completed: {
+        const runResult = this.buffer.slice(0, result.consume);
 
-    case ReadStatus.Completed: {
-      const runResult = this.buffer.slice(0, result.consume);
+        this.buffer = this.buffer.slice(result.consume + result.skip);
 
-      this.buffer = this.buffer.slice(result.consume + result.skip);
+        return ok(runResult);
+      }
 
-      return ok(runResult);
-    }
-
-    case ReadStatus.Error: {
-      return fail(result.error);
-    }
+      case ReadStatus.Error: {
+        return fail(result.error);
+      }
     }
   }
 }

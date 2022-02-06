@@ -47,7 +47,7 @@ describe('readEmptyBody', () => {
   });
 
   test('non-empty body', async () => {
-    const createNonEmptyBody = async function *() {
+    const createNonEmptyBody = async function* () {
       yield ok(Buffer.alloc(10));
     };
 
@@ -169,8 +169,7 @@ test('createEmitEndDecorator', async () => {
 
   const body = createEmitEndDecorator(writeString('hello'), emit);
 
-  for await (const chunk of body) {
-  }
+  for await (const _chunk of body) { }
 
   const result = await signal;
 
@@ -185,8 +184,7 @@ test('createEmitEndDecorator read error', async () => {
 
   const body = createEmitEndDecorator(writeError(new Error('fail')), emit);
 
-  for await (const chunk of body) {
-  }
+  for await (const _chunk of body) { }
 
   const error = await signal;
 

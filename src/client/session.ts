@@ -123,10 +123,10 @@ export class ClientSession implements Receivable, AckSendable {
 
   private subscriptions: Set<string>;
 
-  private messageRequests: {[subscriptionId: string]: MessageCallback};
+  private messageRequests: { [subscriptionId: string]: MessageCallback };
   private unhandledMessage: Frame | undefined;
 
-  private receiptRequests: {[receiptId: string]: ReceiptRequest};
+  private receiptRequests: { [receiptId: string]: ReceiptRequest };
 
   private nextResourceId: number;
   private nextReceiptSeq: number;
@@ -355,7 +355,7 @@ export class ClientSession implements Receivable, AckSendable {
   public cancelReceive(subscription: Subscription): void {
     const id = subscription.id;
 
-    if (!this.messageRequests.hasOwnProperty(id))  {
+    if (!this.messageRequests.hasOwnProperty(id)) {
       return;
     }
 
@@ -381,7 +381,7 @@ export class ClientSession implements Receivable, AckSendable {
         transaction: transactionId
       }),
       body: writeEmptyBody()
-    });
+    }, receiptTimeout);
   }
 
   /**
@@ -399,7 +399,7 @@ export class ClientSession implements Receivable, AckSendable {
         transaction: transactionId
       }),
       body: writeEmptyBody()
-    });
+    }, receiptTimeout);
   }
 
   /**
@@ -459,7 +459,7 @@ export class ClientSession implements Receivable, AckSendable {
    * @param receiptTimeout See the {@link ClientSession} class description for information about this parameter
    */
   public send(frame: Frame, receiptTimeout: number = RECEIPT_DEFAULT_TIMEOUT): Promise<SendResult> {
-    const requiredHeaders: {[command: string]: string[]} = {
+    const requiredHeaders: { [command: string]: string[] } = {
       'SEND': ['destination'],
       'SUBSCRIBE': ['destination', 'id'],
       'UNSUBSCRIBE': ['id'],
@@ -578,7 +578,7 @@ export class ClientSession implements Receivable, AckSendable {
       this.receiveLoopRunning = true;
 
       (async () => {
-        while(this.receiveFrameRequests > 0) {
+        while (this.receiveFrameRequests > 0) {
           await this.receiveLoop();
         }
 
@@ -597,67 +597,67 @@ export class ClientSession implements Receivable, AckSendable {
     const frame = readFrameResult.value;
 
     switch (frame.command) {
-    case 'MESSAGE': {
-      const [readEndObserved, emitReadEnd] = createSignal<Error | void>();
-      const decoratedBody = createEmitEndDecorator(frame.body, emitReadEnd);
+      case 'MESSAGE': {
+        const [readEndObserved, emitReadEnd] = createSignal<Error | void>();
+        const decoratedBody = createEmitEndDecorator(frame.body, emitReadEnd);
 
-      const subscriptionId = frame.headers.get('subscription');
+        const subscriptionId = frame.headers.get('subscription');
 
-      if (!subscriptionId) {
-        return this.shutdown(new Error('server sent MESSAGE frame without including a subscription header'));
-      }
+        if (!subscriptionId) {
+          return this.shutdown(new Error('server sent MESSAGE frame without including a subscription header'));
+        }
 
-      const callback = this.messageRequests[subscriptionId];
+        const callback = this.messageRequests[subscriptionId];
 
-      const message = {
-        ...frame,
-        body: decoratedBody
-      };
+        const message = {
+          ...frame,
+          body: decoratedBody
+        };
 
-      if (callback) {
-        delete this.messageRequests[subscriptionId];
+        if (callback) {
+          delete this.messageRequests[subscriptionId];
 
-        callback(ok(message));
-      }
-      else {
-        const id = message.headers.get('subscription');
-        if (id && this.subscriptions.has(id)) {
-          this.unhandledMessage = message;
+          callback(ok(message));
         }
         else {
-          return this.shutdown(new Error('unhandled message'));
+          const id = message.headers.get('subscription');
+          if (id && this.subscriptions.has(id)) {
+            this.unhandledMessage = message;
+          }
+          else {
+            return this.shutdown(new Error('unhandled message'));
+          }
         }
+
+        await readEndObserved;
+
+        this.receiveFrameRequests -= 1;
+
+        break;
       }
 
-      await readEndObserved;
+      case 'RECEIPT': {
+        const readBodyResult = await readEmptyBody(frame.body);
 
-      this.receiveFrameRequests -= 1;
+        if (failed(readBodyResult)) {
+          return this.shutdown(error(readBodyResult));
+        }
 
-      break;
-    }
+        const receiptId = frame.headers.get('receipt-id');
 
-    case 'RECEIPT': {
-      const readBodyResult = await readEmptyBody(frame.body);
+        if (!receiptId) {
+          return this.shutdown(new Error('server sent RECEIPT frame without a receipt-id header'));
+        }
 
-      if (failed(readBodyResult)) {
-        return this.shutdown(error(readBodyResult));
+        this.receiveFrameRequests -= 1;
+
+        this.processReceipt(receiptId);
+
+        break;
       }
 
-      const receiptId = frame.headers.get('receipt-id');
-
-      if (!receiptId) {
-        return this.shutdown(new Error('server sent RECEIPT frame without a receipt-id header'));
-      }
-
-      this.receiveFrameRequests -= 1;
-
-      this.processReceipt(receiptId);
-
-      break;
-    }
-
-    case 'ERROR':
-      return this.shutdown(new Error('server sent ERROR frame'));
+      case 'ERROR':
+        return this.shutdown(new Error('server sent ERROR frame'));
     }
   }
 
@@ -718,43 +718,43 @@ export class ClientSession implements Receivable, AckSendable {
 
   private observeSendCompletion(frame: Frame) {
     switch (frame.command) {
-    case 'DISCONNECT':
+      case 'DISCONNECT':
 
-      this.shutdown();
+        this.shutdown();
 
-      break;
+        break;
 
-    case 'SUBSCRIBE': {
-      const id = frame.headers.get('id');
+      case 'SUBSCRIBE': {
+        const id = frame.headers.get('id');
 
-      if (!id) {
+        if (!id) {
+          break;
+        }
+
+        this.subscriptions.add(id);
+
         break;
       }
 
-      this.subscriptions.add(id);
+      case 'UNSUBSCRIBE': {
+        const id = frame.headers.get('id');
 
-      break;
-    }
+        if (!id) {
+          break;
+        }
 
-    case 'UNSUBSCRIBE':{
-      const id = frame.headers.get('id');
+        this.subscriptions.delete(id);
 
-      if (!id) {
+        if (this.messageRequests.hasOwnProperty(id)) {
+          const callback = this.messageRequests[id];
+
+          callback(cancel());
+
+          delete this.messageRequests[id];
+        }
+
         break;
       }
-
-      this.subscriptions.delete(id);
-
-      if (this.messageRequests.hasOwnProperty(id)) {
-        const callback = this.messageRequests[id];
-
-        callback(cancel());
-
-        delete this.messageRequests[id];
-      }
-
-      break;
-    }
     }
   }
 }

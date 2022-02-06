@@ -22,7 +22,7 @@ test('push bound', async () => {
   const finishPulls = (async () => {
     let counter = 1;
 
-    for await(const value of consumer) {
+    for await (const value of consumer) {
       expect(value).toBe(counter);
       counter += 1;
     }
@@ -68,7 +68,7 @@ test('drain', async () => {
 
   let counter = 1;
 
-  for await(const value of consumer) {
+  for await (const value of consumer) {
     expect(value).toBe(counter);
     counter += 1;
   }
@@ -77,7 +77,7 @@ test('drain', async () => {
 });
 
 test('drain on terminate', async () => {
-  const [producer, consumer] = createQueue<number>();
+  const [producer, _consumer] = createQueue<number>();
 
   const drain = producer.drained();
 
@@ -100,7 +100,7 @@ test('raise', async () => {
     expect(true).toBe(false);
   }
   catch (e) {
-    expect(e.message).toBe('test');
+    expect((e as Error).message).toBe('test');
   }
 });
 
@@ -117,6 +117,6 @@ test('consume after raise', async () => {
     expect(true).toBe(false);
   }
   catch (e) {
-    expect(e.message).toBe('test');
+    expect((e as Error).message).toBe('test');
   }
 });

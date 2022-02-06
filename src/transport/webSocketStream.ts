@@ -56,7 +56,7 @@ export class WebSocketStream implements TransportStream {
       }
     });
 
-    socket.addEventListener('close', (event) => {
+    socket.addEventListener('close', () => {
       inputQueue.terminate();
     });
 
@@ -85,7 +85,7 @@ export class WebSocketStream implements TransportStream {
       return Promise.reject(new Error('socket is closed'));
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const opened = () => {
         resolve();
         this.socket.removeEventListener('open', opened);
@@ -101,7 +101,7 @@ export class WebSocketStream implements TransportStream {
     });
   }
 
-  public async * [Symbol.asyncIterator]() {
+  public async *[Symbol.asyncIterator]() {
     for await (const chunk of this.socketInput) {
       this.bytesRead += chunk.byteLength;
 
@@ -124,7 +124,12 @@ export class WebSocketStream implements TransportStream {
       await this.socketOutputQueue.drained();
     }
     catch (error) {
-      return error;
+      if (error instanceof Error) {
+        return error;
+      }
+      else {
+        return new Error('write error');
+      }
     }
 
     this.bytesWritten += chunk.byteLength;
@@ -137,7 +142,12 @@ export class WebSocketStream implements TransportStream {
       await this.socketOutputQueue.drained();
     }
     catch (error) {
-      return error;
+      if (error instanceof Error) {
+        return error;
+      }
+      else {
+        return new Error('write error');
+      }
     }
   }
 
@@ -156,7 +166,12 @@ export function wsConnect(url: string, limits?: Partial<TransportLimits>): Promi
       resolve(ok(new StandardTransport(new WebSocketStream(socket), { ...limitDefaults, ...(limits || {}) })));
     }
     catch (error) {
-      resolve(fail(error));
+      if (error instanceof Error) {
+        resolve(fail(error));
+      }
+      else {
+        resolve(fail(new Error('connect error')));
+      }
     }
   });
 }

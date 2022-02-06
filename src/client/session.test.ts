@@ -1,6 +1,6 @@
 import { Result, result, ok, fail, failed, error, RESULT_CANCELLED, RESULT_OK } from '../result';
 import { createQueue, Queue } from '../queue';
-import { Frame, ProtocolVersion, STOMP_VERSION_12 } from '../frame/protocol';
+import { Frame, STOMP_VERSION_12 } from '../frame/protocol';
 import { FrameHeaders, HeaderLineOptional } from '../frame/header';
 import { writeEmptyBody, writeString, readString } from '../frame/body';
 import { Transport } from '../transport';
@@ -32,6 +32,7 @@ class MockServer implements Transport {
 
   private writeFrameResult: Promise<Error | undefined>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public calls: [keyof MockServer, any[]][];
 
   public constructor(outputFrames: Frame[], receiptTimeout: number) {
@@ -49,13 +50,13 @@ class MockServer implements Transport {
     this.calls = [];
   }
 
-  public getReceiptTimeout(frame: Frame) {
+  public getReceiptTimeout() {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['getReceiptTimeout', [...arguments]]);
     return this.receiptTimeout;
   }
 
-  public async readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
+  public async readFrame(): Promise<Result<Frame>> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['readFrame', [...arguments]]);
 
@@ -78,7 +79,7 @@ class MockServer implements Transport {
     this.writeFrameResult = result;
   }
 
-  public writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined> {
+  public writeFrame(): Promise<Error | undefined> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return this.writeFrameResult;

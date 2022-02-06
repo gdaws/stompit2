@@ -1,9 +1,9 @@
-import { Receivable, AckSendable, Subscription, ClientSession } from './session';
+import { Receivable, AckSendable, Subscription } from './session';
 import { failed } from '../result';
 import { RECEIPT_DEFAULT_TIMEOUT } from './receipt';
 import { FrameHeaders } from '../frame/header';
 import { writeBuffer } from '../frame/body';
-import { Frame, getAckMode, ProtocolVersion } from '../frame/protocol';
+import { Frame } from '../frame/protocol';
 
 /**
  * A helper function to construct a sendable JSON message.
@@ -27,11 +27,6 @@ export function jsonMessage(destination: string, content: any): Frame {
   };
 }
 
-
-interface Session extends Receivable {
-  getProtocolVersion(): ProtocolVersion;
-}
-
 /**
  * A helper function that discards all messages received on a subscription.
  *
@@ -50,7 +45,7 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
     return;
   }
 
-  for await (const chunk of message.body) {
+  for await (const _chunk of message.body) {
     // Do nothing
   }
 

@@ -1,6 +1,6 @@
-import { Result, ok, failed, result, error } from '../result';
+import { Result, ok, failed, result } from '../result';
 import { Transport } from '../transport';
-import { Frame, ProtocolVersion, STOMP_VERSION_10 } from '../frame/protocol';
+import { Frame, STOMP_VERSION_10 } from '../frame/protocol';
 import { FrameHeaders } from '../frame/header';
 import { writeEmptyBody, readEmptyBody, writeString } from '../frame/body';
 import { RECEIPT_NOT_REQUESTED } from './receipt';
@@ -9,6 +9,7 @@ import { connect } from './connect';
 class Server implements Transport {
   public writeResult: Error | undefined;
   public readResult: Result<Frame>;
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   public calls: [keyof Server, any[]][];
 
   public constructor(writeResult: Error | undefined, readResult: Result<Frame>) {
@@ -33,19 +34,19 @@ class Server implements Transport {
     }))
   }
 
-  public getReceiptTimeout(frame: Frame) {
+  public getReceiptTimeout() {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['getReceiptTimeout', [...arguments]]);
     return RECEIPT_NOT_REQUESTED;
   }
 
-  public readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
+  public readFrame(): Promise<Result<Frame>> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['readFrame', [...arguments]]);
     return Promise.resolve(this.readResult);
   }
 
-  public writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined> {
+  public writeFrame(): Promise<Error | undefined> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return Promise.resolve(this.writeResult);
@@ -86,7 +87,7 @@ test('connected response', async () => {
   expect(connectFrame.headers.get('passcode')).toBe(headers.get('passcode'));
   expect(connectFrame.headers.has('heart-beat')).toBe(false);
 
-  const readBody = result(await readEmptyBody(connectFrame.body));
+  result(await readEmptyBody(connectFrame.body));
 
   expect(server.calls[0][1][1]).toBe(STOMP_VERSION_10);
 
