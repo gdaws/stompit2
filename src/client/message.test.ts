@@ -7,8 +7,7 @@ import { Receivable, AckSendable, MessageResult, Subscription, SendResult } from
 import { jsonMessage, discardMessages } from './message';
 
 test('jsonMessage', async () => {
-
-  const frame = jsonMessage('/queue/test', {a: 1, b: true, c: 'test'});
+  const frame = jsonMessage('/queue/test', { a: 1, b: true, c: 'test' });
 
   expect(frame.command).toBe('SEND');
   expect(frame.headers.get('destination')).toBe('/queue/test');
@@ -24,7 +23,6 @@ test('jsonMessage', async () => {
 });
 
 class DiscardMessagesMockSession implements Receivable, AckSendable {
-
   private inputConsumer: Consumer<MessageResult>;
 
   public inputProducer: Producer<MessageResult>;
@@ -37,7 +35,6 @@ class DiscardMessagesMockSession implements Receivable, AckSendable {
   }
 
   async receive(subscription: Subscription): Promise<MessageResult> {
-
     const iterator = this.inputConsumer[Symbol.asyncIterator]();
 
     const result = await iterator.next();
@@ -50,18 +47,17 @@ class DiscardMessagesMockSession implements Receivable, AckSendable {
   }
 
   ack(messageId: string, transactionId: string | undefined, receiptTimeout: number): Promise<SendResult> {
-    this.acks.push({command: 'ack', messageId, transactionId, receiptTimeout});
+    this.acks.push({ command: 'ack', messageId, transactionId, receiptTimeout });
     return Promise.resolve(undefined);
   }
 
   nack(messageId: string, transactionId: string | undefined, receiptTimeout: number): Promise<SendResult> {
-    this.acks.push({command: 'nack', messageId, transactionId, receiptTimeout});
+    this.acks.push({ command: 'nack', messageId, transactionId, receiptTimeout });
     return Promise.resolve(undefined);
   }
-};
+}
 
 test('discardMessages', async () => {
-
   const session = new DiscardMessagesMockSession();
 
   const subscription = {
@@ -72,11 +68,11 @@ test('discardMessages', async () => {
     })
   };
 
-  const message = (id: string) => ({command: 'MESSAGE', headers: FrameHeaders.fromMap({
+  const message = (id: string) => ({ command: 'MESSAGE', headers: FrameHeaders.fromMap({
     'subscription': '1',
     'destination': '/queue/test',
     'message-id': id
-  }), body: writeString(id)});
+  }), body: writeString(id) });
 
   const finishDiscardingMessages = discardMessages('ack', subscription, session);
 

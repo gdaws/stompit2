@@ -1,6 +1,6 @@
 import { TextEncoder, TextDecoder } from 'util';
 
-export type TextEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1";
+export type TextEncoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'ucs-2' | 'base64' | 'latin1';
 
 export type Chunk = Uint8Array;
 export type ChunkStream = AsyncIterator<Chunk>;
@@ -20,7 +20,6 @@ export function allocUnsafe(length: number): Chunk {
 }
 
 export function concatPair(first: Chunk, second: Chunk): Chunk {
-
   const result = new Uint8Array(first.length + second.length);
 
   result.set(first, 0);

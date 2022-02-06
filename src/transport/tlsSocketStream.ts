@@ -1,7 +1,7 @@
 import { connect, ConnectionOptions } from 'tls';
 import { Result, ok, fail } from '../result';
 
-import { 
+import {
   TransportLimits,
   StandardTransport,
   limitDefaults
@@ -13,7 +13,7 @@ export function tlsConnect(options: ConnectionOptions, limits?: Partial<Transpor
   return new Promise((resolve) => {
     const socket = connect(options, () => {
       const stream = new NetSocketStream(socket);
-      resolve(ok(new StandardTransport(stream, {...limitDefaults, ...(limits || {})})));
+      resolve(ok(new StandardTransport(stream, { ...limitDefaults, ...(limits || {}) })));
     });
     socket.once('error', (error) => {
       resolve(fail(error));

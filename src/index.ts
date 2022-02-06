@@ -13,14 +13,14 @@ export { jsonMessage } from './client/message';
 export { FrameHeaders } from './frame/header';
 export { FrameBodyChunk } from './frame/protocol';
 
-export { 
-  readString, 
-  readJson, 
-  writeBuffer, 
-  writeEmptyBody, 
-  writeError, 
-  writeJson, 
-  writeString 
+export {
+  readString,
+  readJson,
+  writeBuffer,
+  writeEmptyBody,
+  writeError,
+  writeJson,
+  writeString
 } from './frame/body';
 
 /**
@@ -32,7 +32,6 @@ export {
  * @param password Credential used by broker to perform authentication
  */
 export async function stompConnect(transportConnect: Promise<Result<Transport>>, hostHeader: string, username: string, password: string): Promise<Result<ClientSession>> {
-
   const transConnectResult = await transportConnect;
 
   if (failed(transConnectResult)) {

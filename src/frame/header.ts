@@ -8,12 +8,10 @@ export type HeaderMap = {[name: string]: HeaderValue};
 export type HeaderMapOptional = {[name: string]: HeaderValueOptional};
 
 export class FrameHeaders {
-
-  private lines: HeaderLine[]; 
+  private lines: HeaderLine[];
   private map: HeaderMap;
 
   public constructor(lines: HeaderLineOptional[] = []) {
-
     this.lines = [];
     this.map = {};
 
@@ -33,7 +31,6 @@ export class FrameHeaders {
   }
 
   public static fromMap(map: HeaderMapOptional) {
-
     const result = new FrameHeaders();
 
     Object.entries(map).forEach(([name, value]) => {
@@ -50,7 +47,6 @@ export class FrameHeaders {
   }
 
   public static concat(...headers: FrameHeaders[]) {
-
     const result = new FrameHeaders();
 
     result.lines = ([] as HeaderLine[]).concat(...headers.map(o => o.lines));
@@ -60,7 +56,6 @@ export class FrameHeaders {
   }
 
   public static merge(...headers: FrameHeaders[]) {
-
     const result = new FrameHeaders();
 
     result.map = Object.assign({}, ...headers.map(o => o.map));
@@ -70,7 +65,6 @@ export class FrameHeaders {
   }
 
   private appendLine(name: HeaderName, value: HeaderValue) {
-
     const nameLc = name.toLowerCase();
 
     if (!this.map.hasOwnProperty(nameLc)) {
@@ -95,7 +89,6 @@ export class FrameHeaders {
   }
 
   public required(...names: HeaderName[]): Error | undefined {
-    
     for (const name of names) {
       if (!this.has(name)) {
         return new Error(`missing ${name} header`);
@@ -106,7 +99,7 @@ export class FrameHeaders {
   public [Symbol.iterator](): Iterator<HeaderLine> {
     return this.lines.values();
   }
-};
+}
 
 export function headers(values: HeaderMap) {
   return FrameHeaders.fromMap(values);

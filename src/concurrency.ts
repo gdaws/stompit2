@@ -16,7 +16,6 @@ export type Signal<T> = [Promise<T>, SignalEmitter<T>];
  *  @hidden
  */
 export function createSignal<T>(): Signal<T> {
-
   let emitter: (result: T) => void;
 
   const value = new Promise<T>((resolve) => {

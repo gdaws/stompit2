@@ -1,7 +1,7 @@
 import { ok, fail, failed, Result } from '../result';
 import { FrameHeaders } from '../frame/header';
 
-import { 
+import {
   Frame,
   STOMP_VERSION_10,
   acceptedVersions,
@@ -14,19 +14,18 @@ import { ClientSession } from './session';
 
 /**
  * Initiate a client session with the server.
- * 
+ *
  * @param transport Connected transport
  * @param headers Headers to include in the connect frame.
- * 
+ *
  *  Supported headers:
  *  * `'host'` - REQUIRED
  *  * `'login'`
  *  * `'passcode'`
- * 
+ *
  * @return A connected ClientSession object
  */
 export async function connect(transport: Transport, headers: FrameHeaders): Promise<Result<ClientSession>> {
-
   const connectFrame: Frame = {
     command: 'CONNECT',
     headers: FrameHeaders.merge(headers, FrameHeaders.fromEntries([
@@ -36,7 +35,6 @@ export async function connect(transport: Transport, headers: FrameHeaders): Prom
   };
 
   if (headers.has('heart-beat')) {
-
     // Remove heart-beat header
     connectFrame.headers = connectFrame.headers.filter(([name, _value]) => name !== 'heart-beat');
 

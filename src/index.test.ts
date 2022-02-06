@@ -8,7 +8,6 @@ import { Transport } from './transport';
 import { stompConnect } from './index';
 
 class MockTransport implements Transport {
-
   public writtenFrame: [Frame, ProtocolVersion] | undefined;
   public closed: boolean;
 
@@ -21,7 +20,6 @@ class MockTransport implements Transport {
   }
 
   readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
-
     return Promise.resolve(ok({
       command: 'CONNECTED',
       headers: FrameHeaders.fromEntries([
@@ -40,10 +38,9 @@ class MockTransport implements Transport {
     this.closed = true;
     return Promise.resolve(undefined);
   }
-};
+}
 
 test('stompConnect', async () => {
-
   const transport = new MockTransport();
 
   const session = result(await stompConnect(Promise.resolve(ok(transport)), '/', 'guest', 'password'));
@@ -52,7 +49,7 @@ test('stompConnect', async () => {
   expect(session.getProtocolVersion()).toBe('1.2');
 
   expect(transport.closed).toBe(false);
-  
+
   if (!transport.writtenFrame) {
     expect(transport.writtenFrame).toBeDefined();
     return;

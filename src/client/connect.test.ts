@@ -7,7 +7,6 @@ import { RECEIPT_NOT_REQUESTED } from './receipt';
 import { connect } from './connect';
 
 class Server implements Transport {
-
   public writeResult: Error | undefined;
   public readResult: Result<Frame>;
   public calls: [keyof Server, any[]][];
@@ -18,7 +17,7 @@ class Server implements Transport {
     this.calls = [];
   }
 
-  public static connected(headers: FrameHeaders) {  
+  public static connected(headers: FrameHeaders) {
     return new Server(undefined, ok({
       command: 'CONNECTED',
       headers,
@@ -35,28 +34,31 @@ class Server implements Transport {
   }
 
   public getReceiptTimeout(frame: Frame) {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['getReceiptTimeout', [...arguments]]);
     return RECEIPT_NOT_REQUESTED;
   }
 
   public readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['readFrame', [...arguments]]);
     return Promise.resolve(this.readResult);
   }
 
   public writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined> {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return Promise.resolve(this.writeResult);
   }
 
   public close() {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['close', [...arguments]]);
     return Promise.resolve();
   }
 }
 
 test('connected response', async () => {
-
   const headers = FrameHeaders.fromMap({
     'login': 'guest',
     'passcode': 'passcode',
@@ -95,7 +97,6 @@ test('connected response', async () => {
 });
 
 test('error response', async () => {
-
   const headers = FrameHeaders.fromMap({
     'login': 'guest',
     'passcode': 'passcode',

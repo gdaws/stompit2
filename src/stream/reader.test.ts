@@ -20,7 +20,6 @@ function expectReadEquals(actual: ReadResult, expected: string) {
 }
 
 function expectReadSubstring(actual: ReadResult, minLength: number, expected: string) {
-  
   const value = decodeString(result(actual));
 
   expect(value.length).toBeGreaterThanOrEqual(minLength);
@@ -30,7 +29,6 @@ function expectReadSubstring(actual: ReadResult, minLength: number, expected: st
 }
 
 function expectReadError(actual: ReadResult, message?: string) {
-
   if (!failed(actual)) {
     expect(true).toBe(false);
     return;
@@ -42,7 +40,6 @@ function expectReadError(actual: ReadResult, message?: string) {
 }
 
 describe('read', () => {
-
   test('should not over-consume and should not skip', async () => {
     reset('abcdefh');
     const data1 = await reader.read(3);
@@ -64,12 +61,11 @@ describe('read', () => {
   });
 
   test('fail concurrent operation', async () => {
-
     reset('abcdefh');
-  
+
     const first = reader.read(1);
     const second = reader.read(1);
-    
+
     const [firstResult, secondResult] = await Promise.all([first, second]);
 
     expectReadEquals(firstResult, 'a');
@@ -88,7 +84,6 @@ describe('readRange', () => {
 });
 
 describe('readLine', () => {
-
   test('should not over-consume and should skip LF characters', async () => {
     reset('line 1\nline 2\n');
     const data1 = await reader.readLine(Infinity);

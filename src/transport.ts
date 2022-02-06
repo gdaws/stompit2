@@ -11,34 +11,34 @@ type Milliseconds = number;
 
 /**
  * The transport interface for a STOMP session.
- * 
- * Support for the Heart-beating feature is the responsibility of the transport implementation. If the feature is 
+ *
+ * Support for the Heart-beating feature is the responsibility of the transport implementation. If the feature is
  * unsupported the transport must omit the `heart-beat` header or specify a value of `0,0`.
  */
 export interface Transport {
 
   /**
    * Returns the suggested timeout value for a receipt. This function is only useful for client sessions.
-   * 
+   *
    * Possible values:
    * * Milliseconds as positive integer,
    * * {@link RECEIPT_NO_TIMEOUT},
    * * {@link RECEIPT_NOT_REQUESTED}
-   * 
+   *
    * If a transport returns {@link RECEIPT_DEFAULT_TIMEOUT} then the client session translate this value to {@link RECEIPT_NOT_REQUESTED}
    */
   getReceiptTimeout(frame: Frame): Milliseconds;
 
   /**
-   * Receive the next incoming frame. The return value may resolve before the frame is fully deserialized. The transport 
+   * Receive the next incoming frame. The return value may resolve before the frame is fully deserialized. The transport
    * may only read as far as the end of the frame header to then let the caller control reading the frame body.
-   * 
+   *
    * The STOMP session implementation must not call this function before the previous frame's body has been fully read.
    */
   readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>>;
 
   /**
-   * Send the next outgoing frame. The return value resolves once the frame has been fully serialised and sent for 
+   * Send the next outgoing frame. The return value resolves once the frame has been fully serialised and sent for
    * transmission.
    */
   writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined>;
@@ -47,7 +47,7 @@ export interface Transport {
    * Close the connection.
    */
   close(): Promise<void>;
-};
+}
 
 /**
  * A base class for a transport's configuration class. This is useful for transport implementations that use the
@@ -58,14 +58,14 @@ export interface TransportLimits {
   operationTimeout: Milliseconds;
 
   /**
-   * The desired minimum rate of incoming data from the connection peer. The actual expected rate is negotiated with 
+   * The desired minimum rate of incoming data from the connection peer. The actual expected rate is negotiated with
    * the connection peer as the session is establishing. If no data is received during the interval then the connection
    * is dead.
    */
   desiredReadRate: Milliseconds;
 
   /**
-   * The desired minimum rate of outgoing data to the connection peer. See {@link desiredReadRate} for intended behaviour, 
+   * The desired minimum rate of outgoing data to the connection peer. See {@link desiredReadRate} for intended behaviour,
    * but applies to outgoing data.
    */
   desiredWriteRate: Milliseconds;
@@ -84,7 +84,7 @@ export interface TransportLimits {
    * Write frame size limits
    */
   writeLimits: WriteLimits;
-};
+}
 
 export const limitDefaults: TransportLimits = {
   operationTimeout: 3000,
@@ -119,7 +119,7 @@ export interface TransportStream extends AsyncIterable<Chunk> {
 
   /**
    * Send data
-   * 
+   *
    * @param chunk Byte array
    */
   write(chunk: Chunk): Promise<VoidResult>;
@@ -133,7 +133,7 @@ export interface TransportStream extends AsyncIterable<Chunk> {
    * Close the stream and release the associated resources
    */
   close(): void;
-};
+}
 
 const ERROR_SESSION_TIMEOUT = 'session timeout';
 const ERROR_SESSION_CLOSED = 'session closed';
@@ -143,7 +143,6 @@ const ERROR_SESSION_ALREADY_STARTED = 'session already started';
  * A transport implementation that serialises frames in the standard format and observes the standard protocol.
  */
 export class StandardTransport implements Transport {
-
   private stream: TransportStream;
   private streamError: Error | undefined;
 
@@ -164,8 +163,7 @@ export class StandardTransport implements Transport {
    * @param limits Time and size limits to place on the transport
    * @param sessionStarted Pass true value if the session is already established
    */
-  public constructor(stream: TransportStream, limits: TransportLimits, sessionStarted: boolean = false) {
-
+  public constructor(stream: TransportStream, limits: TransportLimits, sessionStarted = false) {
     this.stream = stream;
 
     this.limits = limits;
@@ -182,7 +180,6 @@ export class StandardTransport implements Transport {
    * @inheritdoc
    */
   public getReceiptTimeout(frame: Frame) {
-
     if ('DISCONNECT' === frame.command || 'UNSUBSCRIBE' === frame.command) {
       return this.limits.operationTimeout;
     }
@@ -194,7 +191,6 @@ export class StandardTransport implements Transport {
    * @inheritdoc
    */
   public async readFrame(protocolVersion: ProtocolVersion) {
-
     if (this.sessionClosed) {
       return fail(this.streamError ? this.streamError : new Error(ERROR_SESSION_CLOSED));
     }
@@ -212,11 +208,9 @@ export class StandardTransport implements Transport {
     }
 
     if (!this.sessionStarted) {
-
       const frame = result.value;
 
       if('CONNECTED' === frame.command) {
-
         this.sessionStarted = true;
 
         const heartbeat = this.startHeartBeat(frame.headers);
@@ -234,7 +228,6 @@ export class StandardTransport implements Transport {
    * @inheritdoc
    */
   public async writeFrame(frame: Frame, protocolVersion: ProtocolVersion) {
-
     if (this.sessionClosed) {
       return this.streamError ? this.streamError : new Error(ERROR_SESSION_CLOSED);
     }
@@ -245,61 +238,57 @@ export class StandardTransport implements Transport {
     };
 
     switch (frame.command) {
-
-      case 'CONNECT': {
-
-        if (this.sessionStarted) {
-          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
-        }
-
-        if (frame.headers.has('heart-beat')) {
-          frame.headers = frame.headers.filter(([name, _value]) => 'heart-beat' === name);
-        }
-
-        const writeRate = this.limits.desiredWriteRate;
-        const readRate = this.limits.desiredReadRate;
-
-        if (writeRate > 0 || readRate > 0) {
-
-          frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
-            ['heart-beat', [
-              Math.max(0, writeRate).toFixed(), 
-              Math.max(0, readRate).toFixed()
-            ].join(',')]
-          ]));
-        }
-
-        break;
+    case 'CONNECT': {
+      if (this.sessionStarted) {
+        return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
       }
 
-      case 'CONNECTED': {
+      if (frame.headers.has('heart-beat')) {
+        frame.headers = frame.headers.filter(([name, _value]) => 'heart-beat' === name);
+      }
 
-        if (this.sessionStarted) {
-          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
-        }
+      const writeRate = this.limits.desiredWriteRate;
+      const readRate = this.limits.desiredReadRate;
 
-        this.sessionStarted = true;
-
-        const heartbeat = this.startHeartBeat(frame.headers, false);
-
-        if (failed(heartbeat)) {
-          return this.failStream(error(heartbeat)).error;
-        }
-
-        const [sendRate, recvRate] = heartbeat.value;
-
+      if (writeRate > 0 || readRate > 0) {
         frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
-          ['heart-beat', `${sendRate},${recvRate}`]
+          ['heart-beat', [
+            Math.max(0, writeRate).toFixed(),
+            Math.max(0, readRate).toFixed()
+          ].join(',')]
         ]));
-
-        break;
       }
+
+      break;
+    }
+
+    case 'CONNECTED': {
+      if (this.sessionStarted) {
+        return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+      }
+
+      this.sessionStarted = true;
+
+      const heartbeat = this.startHeartBeat(frame.headers, false);
+
+      if (failed(heartbeat)) {
+        return this.failStream(error(heartbeat)).error;
+      }
+
+      const [sendRate, recvRate] = heartbeat.value;
+
+      frame.headers = FrameHeaders.merge(frame.headers, new FrameHeaders([
+        ['heart-beat', `${sendRate},${recvRate}`]
+      ]));
+
+      break;
+    }
     }
 
     this.writing = true;
 
     const result = await writeFrame(frame, this.stream, params);
-  
+
     this.writing = false;
 
     if ('CONNECTED' === frame.command) {
@@ -310,7 +299,6 @@ export class StandardTransport implements Transport {
   }
 
   private failStream(error: Error) {
-
     if (this.streamError) {
       return fail(this.streamError);
     }
@@ -326,7 +314,6 @@ export class StandardTransport implements Transport {
    * @inheritdoc
    */
   public close() {
-
     if (this.sessionClosed) {
       return Promise.resolve();
     }
@@ -344,22 +331,19 @@ export class StandardTransport implements Transport {
     }
 
     return (async () => {
-
       if (!this.streamError) {
-
         const error = await this.stream.writeEnd();
 
         if (error) {
           this.streamError = error;
         }
       }
-  
+
       this.stream.close();
     })();
   }
 
-  private startHeartBeat(headers: FrameHeaders, monitor: boolean = true): Result<[number, number]> {
-
+  private startHeartBeat(headers: FrameHeaders, monitor = true): Result<[number, number]> {
     const heartBeatString = headers.get('heart-beat');
 
     if (undefined === heartBeatString) {
@@ -396,11 +380,9 @@ export class StandardTransport implements Transport {
   }
 
   private monitorReadRate(milliseconds: number) {
-
     let lastBytesRead = this.stream.bytesRead;
-    
-    this.readRateTimer = setInterval(() => {
 
+    this.readRateTimer = setInterval(() => {
       const bytesRead = this.stream.bytesRead;
 
       if (bytesRead === lastBytesRead) {
@@ -409,18 +391,15 @@ export class StandardTransport implements Transport {
       }
 
       lastBytesRead = bytesRead;
-
     }, milliseconds);
   }
 
   private monitorWriteRate(milliseconds: number) {
-
     let lastBytesWritten = this.stream.bytesWritten;
 
     const LF = Buffer.from('\n', 'ascii');
 
     this.writeRateTimer = setInterval(() => {
-
       let bytesWritten = this.stream.bytesWritten;
 
       if (bytesWritten === lastBytesWritten && !this.writing) {
@@ -429,7 +408,6 @@ export class StandardTransport implements Transport {
       }
 
       lastBytesWritten = bytesWritten;
-
     }, milliseconds);
   }
 }

@@ -3,19 +3,16 @@ import { Receivable, Subscription } from './session';
 import { FrameHeaders } from '../frame/header';
 import { FrameBody } from '../frame/protocol';
 
-type Message<T> = {headers: FrameHeaders, data: T};
+type Message<T> = { headers: FrameHeaders, data: T };
 
 export function messageQueue<T>(session: Receivable, subscription: Subscription, readBody: (body: FrameBody) => Promise<Result<T>>) {
-
   let terminatedResult: Result<Message<T>> | undefined;
 
   const queue: Message<T>[] = [];
   const consumers: ((message: Result<Message<T>> | CancelResult) => void)[] = [];
 
   const dequeue = () => {
-
     while (queue.length > 0 && consumers.length > 0) {
-
       const consumer = consumers.shift();
 
       if (!consumer) continue;
@@ -28,17 +25,16 @@ export function messageQueue<T>(session: Receivable, subscription: Subscription,
     }
 
     if (undefined !== terminatedResult && consumers.length > 0) {
-
       while (consumers.length > 0) {
         const consumer = consumers.shift();
         if (!consumer) continue;
+
         consumer(terminatedResult);
       }
     }
   };
 
   const receiveLoop = async () => {
-    
     const result = await session.receive(subscription);
 
     if (result.status !== RESULT_OK) {
@@ -59,7 +55,7 @@ export function messageQueue<T>(session: Receivable, subscription: Subscription,
       return;
     }
 
-    queue.push({headers, data: readBodyResult.value});
+    queue.push({ headers, data: readBodyResult.value });
 
     dequeue();
 

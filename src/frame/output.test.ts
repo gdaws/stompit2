@@ -4,9 +4,9 @@ import { Writer } from '../stream/writer';
 import { Chunk, alloc, concatPair } from '../stream/chunk';
 import { writeFrame, WriteParameters } from './output';
 
-import { 
-  STOMP_VERSION_10, 
-  STOMP_VERSION_11, 
+import {
+  STOMP_VERSION_10,
+  STOMP_VERSION_11,
   STOMP_VERSION_12,
   Frame
 } from './protocol';
@@ -21,7 +21,6 @@ const someWriteParams: WriteParameters = {
 };
 
 class BufferWriter implements Writer {
-
   private buffer: Chunk;
 
   public constructor() {
@@ -40,7 +39,6 @@ class BufferWriter implements Writer {
 }
 
 async function writeValid(frame: Frame, params: WriteParameters = someWriteParams) {
-
   const buffer = new BufferWriter();
 
   const error = await writeFrame(frame, buffer, params);
@@ -51,8 +49,6 @@ async function writeValid(frame: Frame, params: WriteParameters = someWriteParam
 }
 
 async function writeInvalid(frame: Frame, params: WriteParameters = someWriteParams) {
-
-
   const buffer = new BufferWriter();
 
   const error = await writeFrame(frame, buffer, params);
@@ -61,23 +57,20 @@ async function writeInvalid(frame: Frame, params: WriteParameters = someWritePar
 }
 
 describe('writeFrame', () => {
-
   test('typical CONNECT frame', async () => {
-
     const frame: Frame = {
       command: 'CONNECT',
       headers: new FrameHeaders([
         ['accept-version', '1.2'],
         ['host', '/']
       ]),
-      body: writeEmptyBody() 
+      body: writeEmptyBody()
     };
 
     expect(await writeValid(frame)).toBe('CONNECT\naccept-version:1.2\nhost:\/\n\n\x00\n');
   });
 
   test('dynamic size', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -93,7 +86,6 @@ describe('writeFrame', () => {
   });
 
   test('fixed size', async () => {
-    
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -110,7 +102,6 @@ describe('writeFrame', () => {
   });
 
   test('bufferless', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -122,11 +113,10 @@ describe('writeFrame', () => {
       })()
     };
 
-    expect(await writeValid(frame, {...someWriteParams, bufferSize: 0})).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00\n');
+    expect(await writeValid(frame, { ...someWriteParams, bufferSize: 0 })).toBe('SEND\ndestination:\/queue\/a\n\nhello\x00\n');
   });
-  
-  test('invalid content-length header', async () => {
 
+  test('invalid content-length header', async () => {
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -146,7 +136,6 @@ describe('writeFrame', () => {
   });
 
   test('incorrect content-length header - declared too small', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -166,7 +155,6 @@ describe('writeFrame', () => {
   });
 
   test('incorrect content-length header - declared too large', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -186,7 +174,6 @@ describe('writeFrame', () => {
   });
 
   test('value encoding in protocol version 1.1', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -196,13 +183,12 @@ describe('writeFrame', () => {
       body: writeEmptyBody()
     };
 
-    expect(await writeValid(frame, {...someWriteParams, protocolVersion: STOMP_VERSION_11}))
+    expect(await writeValid(frame, { ...someWriteParams, protocolVersion: STOMP_VERSION_11 }))
       .toBe('SEND\ndestination:queue\\ca\\nqueue\\cb\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00\n')
     ;
   });
 
   test('value encoding in protocol version 1.2', async () => {
-
     const frame: Frame = {
       command: 'SEND',
       headers: new FrameHeaders([
@@ -212,7 +198,7 @@ describe('writeFrame', () => {
       body: writeEmptyBody()
     };
 
-    expect(await writeValid(frame, {...someWriteParams, protocolVersion: STOMP_VERSION_12}))
+    expect(await writeValid(frame, { ...someWriteParams, protocolVersion: STOMP_VERSION_12 }))
       .toBe('SEND\ndestination:queue\\ca\\r\\nqueue\\cb\\r\\nqueue\\c\\\\\nfoo\\cdestination:test\n\n\x00\n')
     ;
   });

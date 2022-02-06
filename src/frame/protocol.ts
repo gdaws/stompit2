@@ -8,22 +8,21 @@ export const STOMP_VERSION_10 = '1.0';
 export const STOMP_VERSION_11 = '1.1';
 export const STOMP_VERSION_12 = '1.2';
 
-export type ProtocolVersion = 
-  typeof STOMP_VERSION_10 | 
-  typeof STOMP_VERSION_11 | 
+export type ProtocolVersion =
+  typeof STOMP_VERSION_10 |
+  typeof STOMP_VERSION_11 |
   typeof STOMP_VERSION_12
 ;
 
 export function acceptedVersions(): ProtocolVersion[] {
   return [
-    STOMP_VERSION_10, 
-    STOMP_VERSION_11, 
+    STOMP_VERSION_10,
+    STOMP_VERSION_11,
     STOMP_VERSION_12
   ];
 }
 
 export function supportedProtocolVersion(version: any): ProtocolVersion | undefined {
-
   const versions = acceptedVersions()
   const index = versions.indexOf(version);
 
@@ -55,7 +54,7 @@ export interface Frame {
    *  * COMMIT
    *  * ABORT
    *  * DISCONNECT
-   * 
+   *
    * Standard server commands:
    *  * CONNECTED
    *  * MESSAGE
@@ -72,20 +71,19 @@ export interface Frame {
    * The unread or unwritten body
    */
   body: FrameBody;
-};
+}
 
 export type AckMode = 'auto' | 'client' | 'client-individual';
 
 export function acceptedAckModes(protocolVersion: ProtocolVersion): AckMode[] {
   return [
-    'auto', 
-    'client', 
+    'auto',
+    'client',
     'client-individual'
   ];
 }
 
 export function getAckMode(value: any, protocolVersion: ProtocolVersion): AckMode | undefined {
-
   if (undefined === value) {
     return 'auto';
   }

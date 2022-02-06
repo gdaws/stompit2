@@ -1,11 +1,10 @@
 import { WebSocket, Server } from 'mock-socket';
 import { createSignal } from '../concurrency';
 import { result, failed, error } from '../result';
-import { encodeUtf8String, decodeString } from '../stream/chunk'; 
+import { encodeUtf8String, decodeString } from '../stream/chunk';
 import { WebSocketStream, wsConnect } from './webSocketStream';
 
 class MockBlob extends Blob {
-
   private _buffer: ArrayBuffer;
 
   constructor(buffer: ArrayBuffer) {
@@ -16,10 +15,9 @@ class MockBlob extends Blob {
   async arrayBuffer() {
     return this._buffer;
   }
-};
+}
 
 test('data transfer', async () => {
-
   const url = 'ws://localhost:8080';
 
   const server = new Server(url);
@@ -28,9 +26,7 @@ test('data transfer', async () => {
   const [clientClosed, clientClosedSignal] = createSignal();
 
   server.on('connection', socket => {
-
     socket.on('message', data => {
-
       serverReceivedDataSignal(decodeString(data as Uint8Array));
 
       socket.send('hello client');
@@ -55,7 +51,7 @@ test('data transfer', async () => {
   const clientReadResult = await clientReadIterator.next();
 
   expect(clientReadResult.done).toBe(false);
-  
+
   if (!clientReadResult.value) {
     expect(clientReadResult.value).toBeDefined();
     return;
@@ -66,7 +62,7 @@ test('data transfer', async () => {
   const clientSecondReadResult = await clientReadIterator.next();
 
   expect(clientSecondReadResult.done).toBe(false);
-  
+
   if (!clientSecondReadResult.value) {
     expect(clientSecondReadResult.value).toBeDefined();
     return;
@@ -77,7 +73,7 @@ test('data transfer', async () => {
   const clientThirdReadResult = await clientReadIterator.next();
 
   expect(clientThirdReadResult.done).toBe(false);
-  
+
   if (!clientThirdReadResult.value) {
     expect(clientThirdReadResult.value).toBeDefined();
     return;
@@ -105,7 +101,6 @@ test('data transfer', async () => {
 });
 
 test('wsConnect', async () => {
-
   global.WebSocket = WebSocket;
 
   const url = 'ws://localhost:8081';
@@ -118,14 +113,13 @@ test('wsConnect', async () => {
 });
 
 test('wsConnect error', async () => {
-
   class MockFailWebSocket extends WebSocket {
     constructor(url: string) {
       super(url);
       throw new Error('could not connect');
     }
-  };
-  
+  }
+
   global.WebSocket = MockFailWebSocket;
 
   const url = 'ws://non-existent:8081';

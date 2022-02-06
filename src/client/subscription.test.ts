@@ -5,7 +5,6 @@ import { Receivable, MessageResult, Subscription } from './session';
 import { messageQueue } from './subscription';
 
 class MockSession implements Receivable {
-
   private queue: MessageResult[];
   private consumer: ((result: MessageResult) => void) | undefined;
 
@@ -22,7 +21,6 @@ class MockSession implements Receivable {
   }
 
   private dequeue() {
-    
     if (this.queue.length === 0 || !this.consumer) {
       return;
     }
@@ -41,15 +39,14 @@ class MockSession implements Receivable {
   }
 
   public receive(subscription: Subscription): Promise<MessageResult> {
-
     this.calls.push(subscription);
-    
+
     return new Promise((resolve) => {
       this.consumer = resolve;
       this.dequeue();
     });
   }
-};
+}
 
 function message(content: string) {
   return ok({
@@ -60,7 +57,7 @@ function message(content: string) {
   });
 }
 
-function createSubscription(id: string = '1', destination: string = '/queue/a', ack: string = 'auto') {
+function createSubscription(id = '1', destination = '/queue/a', ack = 'auto') {
   return {
     id,
     headers: new FrameHeaders([
@@ -72,14 +69,12 @@ function createSubscription(id: string = '1', destination: string = '/queue/a', 
 }
 
 describe('messageQueue', () => {
-
   test('consecutive receives', async () => {
-
     const session = new MockSession();
 
     session.push(message('one'));
     session.push(message('two'));
-    
+
     const subscription = createSubscription();
 
     const receive = messageQueue(session, subscription, readString);
@@ -94,7 +89,6 @@ describe('messageQueue', () => {
   });
 
   test('receive fail', async () => {
-
     const session = new MockSession();
 
     session.push(fail(new Error('session disconnected')));

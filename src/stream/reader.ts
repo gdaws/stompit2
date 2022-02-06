@@ -5,26 +5,26 @@ enum ReadStatus {
   Continued,
   Completed,
   Error
-};
+}
 
 interface ReadOperationResult {
   readonly status: ReadStatus;
-};
+}
 
 interface ReadContinued extends ReadOperationResult {
   readonly status: typeof ReadStatus.Continued;
-};
+}
 
 interface ReadCompleted extends ReadOperationResult {
   readonly status: typeof ReadStatus.Completed;
   readonly consume: number;
   readonly skip: number;
-};
+}
 
 interface ReadError extends ReadOperationResult {
   readonly status: typeof ReadStatus.Error;
   readonly error: Error;
-};
+}
 
 const continued = (): ReadContinued => ({
   status: ReadStatus.Continued
@@ -43,10 +43,9 @@ export type ReadResult = Result<Chunk>;
 interface ReadCompletion {
   resolve: (chunk: ReadResult) => void;
   reject: (any: any) => void;
-};
+}
 
 export class Reader {
-
   private stream: ChunkStream;
 
   private buffer: Chunk;
@@ -54,7 +53,6 @@ export class Reader {
   private running: boolean;
 
   public constructor(stream: ChunkStream) {
-
     this.stream = stream;
 
     this.buffer = alloc(0);
@@ -63,7 +61,6 @@ export class Reader {
   }
 
   public readRange(minBytes: number, maxBytes: number): Promise<ReadResult> {
-
     if (minBytes < 1) {
       return Promise.resolve(fail(new Error('invalid minBytes parameter')));
     }
@@ -82,18 +79,14 @@ export class Reader {
   }
 
   public readLine(maxLength: number): Promise<ReadResult> {
-
     let index = 0;
 
     return this.run(
       (buffer) => {
-
         const end = Math.min(buffer.length, maxLength);
 
         for (; index < end; index++) {
-
           if (0xA === buffer[index]) {
-
             const after = index + 1;
 
             if (index > 0 && 0xD === buffer[index - 1]) {
@@ -117,15 +110,12 @@ export class Reader {
   }
 
   public readUntil(magicByte: number, maxReadLength: number): Promise<ReadResult>  {
-
-    let index = 0;    
+    let index = 0;
 
     return this.run((buffer) => {
-
       const end = Math.min(buffer.length, maxReadLength);
 
       for(; index < end; index++) {
-
         if (buffer[index] === magicByte) {
           return completed(index + 1, 0);
         }
@@ -140,7 +130,6 @@ export class Reader {
   }
 
   private async run(operation: ReadOperation): Promise<ReadResult> {
-
     if (this.running) {
       return fail(new Error('read operation already running'));
     }
@@ -155,14 +144,12 @@ export class Reader {
   }
 
   private async runProper(operation: ReadOperation, readStream: boolean): Promise<ReadResult> {
-
     let streamEnded;
 
     if (readStream) {
       try {
-
         const streamStatus = await this.stream.next();
-  
+
         streamEnded = streamStatus.done;
 
         if (streamStatus.value) {
@@ -177,28 +164,25 @@ export class Reader {
     const result = operation(this.buffer);
 
     switch (result.status) {
-
-      case ReadStatus.Continued: {
-
-        if (streamEnded) {
-          return fail(new Error('unexpected end of stream'));
-        }
-
-        return this.runProper(operation, true);
+    case ReadStatus.Continued: {
+      if (streamEnded) {
+        return fail(new Error('unexpected end of stream'));
       }
 
-      case ReadStatus.Completed: {
+      return this.runProper(operation, true);
+    }
 
-        const runResult = this.buffer.slice(0, result.consume);
+    case ReadStatus.Completed: {
+      const runResult = this.buffer.slice(0, result.consume);
 
-        this.buffer = this.buffer.slice(result.consume + result.skip);
-  
-        return ok(runResult);
-      }
+      this.buffer = this.buffer.slice(result.consume + result.skip);
 
-      case ReadStatus.Error: {
-        return fail(result.error);
-      }
+      return ok(runResult);
+    }
+
+    case ReadStatus.Error: {
+      return fail(result.error);
+    }
     }
   }
-};
+}

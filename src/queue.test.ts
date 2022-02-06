@@ -1,7 +1,6 @@
 import { createQueue } from './queue';
 
 test('pull bound', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   producer.push(1);
@@ -18,11 +17,9 @@ test('pull bound', async () => {
 });
 
 test('push bound', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   const finishPulls = (async () => {
-
     let counter = 1;
 
     for await(const value of consumer) {
@@ -40,7 +37,6 @@ test('push bound', async () => {
 });
 
 test('call consumers on terminate', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   const pullIterator = consumer[Symbol.asyncIterator]();
@@ -55,11 +51,9 @@ test('call consumers on terminate', async () => {
 });
 
 test('drain', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   const finishPushes = (async () => {
-
     producer.push(1);
     producer.push(2);
 
@@ -83,7 +77,6 @@ test('drain', async () => {
 });
 
 test('drain on terminate', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   const drain = producer.drained();
@@ -95,7 +88,6 @@ test('drain on terminate', async () => {
 });
 
 test('raise', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   const pullIterator = consumer[Symbol.asyncIterator]();
@@ -113,7 +105,6 @@ test('raise', async () => {
 });
 
 test('consume after raise', async () => {
-
   const [producer, consumer] = createQueue<number>();
 
   producer.raise(new Error('test'));

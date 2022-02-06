@@ -4,15 +4,14 @@ import { Result, ok, fail } from '../result';
 import { Chunk, encodeUtf8String } from '../stream/chunk';
 import { createQueue, Producer } from '../queue';
 
-import { 
-  TransportStream, 
+import {
+  TransportStream,
   TransportLimits,
   StandardTransport,
   limitDefaults
 } from '../transport';
 
 export class WebSocketStream implements TransportStream {
-
   private socket: WebSocket;
 
   private socketInput: AsyncIterable<Chunk>;
@@ -24,7 +23,6 @@ export class WebSocketStream implements TransportStream {
   public bytesWritten: number;
 
   public constructor(socket: WebSocket) {
-
     this.socket = socket;
 
     this.bytesRead = 0;
@@ -38,7 +36,6 @@ export class WebSocketStream implements TransportStream {
     this.socketOutputQueue = outputQueue;
 
     socket.addEventListener('message', (event) => {
-
       const data = event.data;
 
       if (data instanceof ArrayBuffer) {
@@ -46,7 +43,7 @@ export class WebSocketStream implements TransportStream {
         return;
       }
 
-      if (typeof data === "string") {
+      if (typeof data === 'string') {
         inputQueue.push(encodeUtf8String(data));
         return;
       }
@@ -64,9 +61,7 @@ export class WebSocketStream implements TransportStream {
     });
 
     (async () => {
-      
       for await (const chunk of pullOutputQueue) {
-
         try {
           await this.socketReady();
         }
@@ -82,7 +77,6 @@ export class WebSocketStream implements TransportStream {
   }
 
   private socketReady() {
-
     if (this.socket.readyState === WebSocket.OPEN) {
       return Promise.resolve();
     }
@@ -92,7 +86,6 @@ export class WebSocketStream implements TransportStream {
     }
 
     return new Promise((resolve, reject) => {
-
       const opened = () => {
         resolve();
         this.socket.removeEventListener('open', opened);
@@ -109,9 +102,7 @@ export class WebSocketStream implements TransportStream {
   }
 
   public async * [Symbol.asyncIterator]() {
-
     for await (const chunk of this.socketInput) {
-
       this.bytesRead += chunk.byteLength;
 
       yield chunk;
@@ -119,7 +110,6 @@ export class WebSocketStream implements TransportStream {
   }
 
   public async write(chunk: Chunk): Promise<Error | undefined> {
-
     if (this.socket.readyState === WebSocket.CLOSED) {
       return new Error('socket is closed');
     }
@@ -141,7 +131,6 @@ export class WebSocketStream implements TransportStream {
   }
 
   public async writeEnd(): Promise<Error | undefined> {
-
     this.socketOutputQueue.terminate();
 
     try {
@@ -158,15 +147,13 @@ export class WebSocketStream implements TransportStream {
 }
 
 export function wsConnect(url: string, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
-
   return new Promise((resolve) => {
-
     try {
       const socket = new WebSocket(url);
 
       socket.binaryType = 'arraybuffer';
-  
-      resolve(ok(new StandardTransport(new WebSocketStream(socket), {...limitDefaults, ...(limits || {})})));
+
+      resolve(ok(new StandardTransport(new WebSocketStream(socket), { ...limitDefaults, ...(limits || {}) })));
     }
     catch (error) {
       resolve(fail(error));

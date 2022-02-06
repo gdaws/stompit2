@@ -3,15 +3,14 @@ import { Result, ok, fail } from '../result';
 import { Chunk } from '../stream/chunk';
 import { VoidResult } from '../result';
 
-import { 
-  TransportStream, 
+import {
+  TransportStream,
   TransportLimits,
   StandardTransport,
   limitDefaults
 } from '../transport';
 
 export class NetSocketStream implements TransportStream {
-
   private socket: Socket;
 
   public constructor(socket: Socket) {
@@ -41,6 +40,7 @@ export class NetSocketStream implements TransportStream {
           resolve(error);
           return;
         }
+
         setImmediate(resolve);
       });
     });
@@ -60,11 +60,10 @@ export class NetSocketStream implements TransportStream {
 }
 
 export function netConnect(options: SocketConnectOpts, limits?: Partial<TransportLimits>): Promise<Result<StandardTransport>> {
-
   return new Promise((resolve) => {
     const socket = createConnection(options, () => {
       const stream = new NetSocketStream(socket);
-      resolve(ok(new StandardTransport(stream, {...limitDefaults, ...(limits || {})})));
+      resolve(ok(new StandardTransport(stream, { ...limitDefaults, ...(limits || {}) })));
     });
     socket.once('error', (error) => {
       resolve(fail(error));

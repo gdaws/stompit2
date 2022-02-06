@@ -1,7 +1,6 @@
 import { alloc, allocUnsafe, concatPair, streamFromString, encodeUtf8String, decodeString } from './chunk';
 
 test('alloc', () => {
-
   const array = alloc(10);
 
   expect(array.length).toBe(10);
@@ -11,7 +10,6 @@ test('alloc', () => {
 });
 
 test('allocUnsafe', () => {
-
   const array = allocUnsafe(10);
 
   expect(array.length).toBe(10);
@@ -19,7 +17,6 @@ test('allocUnsafe', () => {
 });
 
 test('concatPair', () => {
-
   const first = alloc(1);
   first[0] = 1;
 
@@ -35,12 +32,11 @@ test('concatPair', () => {
 });
 
 test('streamFromString', async () => {
-
   const stream = streamFromString('A');
 
   let buffer = alloc(0);
 
-  for await (const chunk of {[Symbol.asyncIterator]: () => stream}) {
+  for await (const chunk of { [Symbol.asyncIterator]: () => stream }) {
     buffer = concatPair(buffer, chunk);
   }
 
@@ -49,7 +45,6 @@ test('streamFromString', async () => {
 });
 
 test('encodeUtf8String', () => {
-
   const chunk = encodeUtf8String('A');
 
   expect(chunk.length).toBe(1);
@@ -57,7 +52,6 @@ test('encodeUtf8String', () => {
 });
 
 test('decodeString', () => {
-
   const chunk = alloc(1);
   chunk[0] = 65;
 

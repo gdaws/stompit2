@@ -23,41 +23,40 @@ function message(headers: HeaderLineOptional[], body: string) {
     headers: new FrameHeaders(headers),
     body: writeString(body)
   };
-};
+}
 
 class MockServer implements Transport {
-
   private receiptTimeout: number;
 
-  public resultQueue: Queue<Result<Frame>>;;
+  public resultQueue: Queue<Result<Frame>>;
 
   private writeFrameResult: Promise<Error | undefined>;
 
   public calls: [keyof MockServer, any[]][];
 
   public constructor(outputFrames: Frame[], receiptTimeout: number) {
-
     this.receiptTimeout = receiptTimeout;
 
     this.resultQueue = createQueue<Result<Frame>>();
-    
+
     for (const frame of outputFrames) {
       this.resultQueue[0].push(ok(frame));
     }
 
     outputFrames.map(frame => ok(frame));
 
-    this.writeFrameResult = Promise.resolve(undefined);;
+    this.writeFrameResult = Promise.resolve(undefined);
     this.calls = [];
   }
 
   public getReceiptTimeout(frame: Frame) {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['getReceiptTimeout', [...arguments]]);
     return this.receiptTimeout;
   }
 
   public async readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>> {
-    
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['readFrame', [...arguments]]);
 
     const iterator = this.resultQueue[1][Symbol.asyncIterator]();
@@ -80,18 +79,19 @@ class MockServer implements Transport {
   }
 
   public writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined> {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return this.writeFrameResult;
   }
 
   public close() {
+    // eslint-disable-next-line prefer-rest-params
     this.calls.push(['close', [...arguments]]);
     return Promise.resolve();
   }
 }
 
 test('send', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
@@ -110,7 +110,7 @@ test('send', async () => {
   expect(sendError).toBeUndefined();
 
   expect(server.calls[0][0] == 'getReceiptTimeout');
-  
+
   expect(server.calls[1][0] == 'writeFrame');
 
   const frame: Frame = server.calls[0][1][0];
@@ -125,7 +125,6 @@ test('send', async () => {
 });
 
 test('send after shutdown', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -144,7 +143,6 @@ test('send after shutdown', async () => {
 });
 
 test('missing destination header', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -161,7 +159,6 @@ test('missing destination header', async () => {
 });
 
 test('receipt', async () => {
-
   const server = new MockServer([receipt('1')], RECEIPT_SHORT_TIMEOUT);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -181,7 +178,7 @@ test('receipt', async () => {
   expect(server.calls.length).toBe(3);
 
   expect(server.calls[0][0]).toBe('getReceiptTimeout');
-  
+
   // Should expect the client to call readFrame first for the receipt
   expect(server.calls[1][0]).toBe('readFrame');
 
@@ -193,7 +190,6 @@ test('receipt', async () => {
 });
 
 test('receipt timeout', async () => {
-
   const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -215,7 +211,6 @@ test('receipt timeout', async () => {
 });
 
 test('latest receipt completes previous receipt requets', async () => {
-
   const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -233,7 +228,6 @@ test('latest receipt completes previous receipt requets', async () => {
 });
 
 test('reciept does not complete newer receipt request', async () => {
-
   const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -245,21 +239,19 @@ test('reciept does not complete newer receipt request', async () => {
   const [send1Result, send2Result] = await Promise.all([send1, send2]);
 
   expect(send1Result).toBeUndefined();
-  
+
   expect(send2Result).toBeDefined();
   expect(send2Result?.message).toBe('receipt timeout');
 });
 
 test('concurrent writes', (done) => {
-
   const server = new MockServer([receipt('1'), receipt('2')], RECEIPT_SHORT_TIMEOUT);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const a = session.send({command: 'SEND', headers: new FrameHeaders([['destination', '/queue/a']]), body: writeString('a')});
-  const b = session.send({command: 'SEND', headers: new FrameHeaders([['destination', '/queue/b']]), body: writeString('b')});
+  const a = session.send({ command: 'SEND', headers: new FrameHeaders([['destination', '/queue/a']]), body: writeString('a') });
+  const b = session.send({ command: 'SEND', headers: new FrameHeaders([['destination', '/queue/b']]), body: writeString('b') });
 
   Promise.all([a, b]).then(value => {
-
     const aError = value[0];
     const bError = value[1];
 
@@ -273,7 +265,6 @@ test('concurrent writes', (done) => {
 });
 
 test('begin', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -290,7 +281,6 @@ test('begin', async () => {
 });
 
 test('begin error', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -302,7 +292,6 @@ test('begin error', async () => {
 });
 
 test('commit', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -321,7 +310,6 @@ test('commit', async () => {
 });
 
 test('commit error', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -335,7 +323,6 @@ test('commit error', async () => {
 });
 
 test('abort', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -355,7 +342,6 @@ test('abort', async () => {
 
 
 test('abort error', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -369,7 +355,6 @@ test('abort error', async () => {
 });
 
 test('subscribe', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -391,7 +376,6 @@ test('subscribe', async () => {
 });
 
 test('subscribe error', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -403,11 +387,10 @@ test('subscribe error', async () => {
 });
 
 test('unsubscribe', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const subscription = {id: 'fake-subscription', headers: new FrameHeaders([])};
+  const subscription = { id: 'fake-subscription', headers: new FrameHeaders([]) };
 
   const error = await session.unsubscribe(subscription, RECEIPT_DEFAULT_TIMEOUT);
 
@@ -422,13 +405,12 @@ test('unsubscribe', async () => {
 });
 
 test('unsubscribe error', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
   server.setWriteFrameResult(Promise.resolve(new Error('test')));
 
-  const subscription = {id: 'fake-subscription', headers: new FrameHeaders([])};
+  const subscription = { id: 'fake-subscription', headers: new FrameHeaders([]) };
 
   const error = await session.unsubscribe(subscription, RECEIPT_DEFAULT_TIMEOUT);
 
@@ -436,11 +418,10 @@ test('unsubscribe error', async () => {
 });
 
 test('unsubscribe cancels receive', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const subscription = {id: 'fake-subscription', headers: new FrameHeaders([])};
+  const subscription = { id: 'fake-subscription', headers: new FrameHeaders([]) };
 
   const receive = session.receive(subscription);
 
@@ -452,7 +433,6 @@ test('unsubscribe cancels receive', async () => {
 });
 
 test('ack', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -471,7 +451,6 @@ test('ack', async () => {
 });
 
 test('nack', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -490,19 +469,20 @@ test('nack', async () => {
 });
 
 test('receive', async () => {
-
   const server = new MockServer([
-    {command: 'MESSAGE', headers: new FrameHeaders([
-      ['subscription', '1'],
-      ['message-id', '007'],
-      ['destination', '/queue/a'],
-      ['content-type', 'text/plain']
-    ]), body: writeString('hello')}
+    {
+      command: 'MESSAGE', headers: new FrameHeaders([
+        ['subscription', '1'],
+        ['message-id', '007'],
+        ['destination', '/queue/a'],
+        ['content-type', 'text/plain']
+      ]), body: writeString('hello')
+    }
   ], RECEIPT_NOT_REQUESTED);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const subscription = {id: '1', headers: new FrameHeaders([])};
+  const subscription = { id: '1', headers: new FrameHeaders([]) };
 
   const message = result(await session.receive(subscription));
 
@@ -511,18 +491,17 @@ test('receive', async () => {
   expect(message.headers.get('message-id')).toBe('007');
   expect(message.headers.get('destination')).toBe('/queue/a');
   expect(message.headers.get('content-type')).toBe('text/plain');
-  
+
   const bodyString = result(await readString(message.body));
 
   expect(bodyString).toBe('hello');
 });
 
 test('cancelReceive', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const dummySubscription = {id: '1', headers: new FrameHeaders([])};
+  const dummySubscription = { id: '1', headers: new FrameHeaders([]) };
 
   const receive = session.receive(dummySubscription);
 
@@ -534,20 +513,18 @@ test('cancelReceive', async () => {
 });
 
 test('cancelReceive on unknown operation', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  session.cancelReceive({id: 'unknown', headers: new FrameHeaders([])});
+  session.cancelReceive({ id: 'unknown', headers: new FrameHeaders([]) });
 });
 
 test('receive reset', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const dummySubscription = {id: '1', headers: new FrameHeaders([])};
+  const dummySubscription = { id: '1', headers: new FrameHeaders([]) };
 
   const receive1 = session.receive(dummySubscription);
   const receive2 = session.receive(dummySubscription);
@@ -567,11 +544,10 @@ test('receive reset', async () => {
 });
 
 test('readFrame fail', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const dummySubscription = {id: '1', headers: new FrameHeaders([])};
+  const dummySubscription = { id: '1', headers: new FrameHeaders([]) };
 
   const send = session.send(message([['destination', '/queue/a']], 'hello'), RECEIPT_SHORT_TIMEOUT);
   const receive = session.receive(dummySubscription);
@@ -597,7 +573,6 @@ test('readFrame fail', async () => {
 });
 
 test('writeFrame fail', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -609,14 +584,13 @@ test('writeFrame fail', async () => {
   expect(sendError?.message).toBe('session disconnected');
 
   expect(session.isDisconnected()).toBe(true);
-  
+
   const lastCall = server.calls[server.calls.length - 1];
 
   expect(lastCall[0]).toBe('close');
 });
 
 test('disconnect', async () => {
-
   const server = new MockServer([receipt('1')], RECEIPT_SHORT_TIMEOUT);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
@@ -636,7 +610,6 @@ test('disconnect', async () => {
 });
 
 test('disconnect using send', async () => {
-
   const server = new MockServer([receipt('1')], RECEIPT_SHORT_TIMEOUT);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
@@ -662,19 +635,17 @@ test('disconnect using send', async () => {
 });
 
 test('disconnect cancels receive', (done) => {
-
   const server = new MockServer([receipt('1')], RECEIPT_SHORT_TIMEOUT);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const dummySubscription = {id: '1', headers: new FrameHeaders()};
+  const dummySubscription = { id: '1', headers: new FrameHeaders() };
 
   const message = session.receive(dummySubscription);
 
   const disconnect = session.disconnect();
 
   Promise.all([message, disconnect]).then((result) => {
-
     const [messageResult, disconnectError] = result;
 
     expect(messageResult && messageResult.status).toBe(RESULT_CANCELLED);
@@ -686,7 +657,6 @@ test('disconnect cancels receive', (done) => {
 });
 
 test('unreceipt disconnect cancels receipts', async () => {
-
   const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
 
   const session = new ClientSession(server, STOMP_VERSION_12);
@@ -704,9 +674,8 @@ test('unreceipt disconnect cancels receipts', async () => {
 });
 
 test('async sends with sync disconnect', async () => {
-
   const server = new MockServer([receipt('1')], RECEIPT_SHORT_TIMEOUT);
-  
+
   const session = new ClientSession(server, STOMP_VERSION_12);
 
   const send1 = session.send(message([['destination', '/queue/a']], 'hello'), RECEIPT_NOT_REQUESTED);
@@ -723,7 +692,6 @@ test('async sends with sync disconnect', async () => {
 });
 
 test('shutdown', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -741,7 +709,6 @@ test('shutdown', async () => {
 });
 
 test('shutdown cancels receive', (done) => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -754,21 +721,19 @@ test('shutdown cancels receive', (done) => {
   session.shutdown();
 
   message.then(result => {
-
     expect(result.status).toBe(RESULT_CANCELLED);
 
     done();
   });
 });
 
-test('unhandled message', async() => {
-
+test('unhandled message', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const receive = session.receive({id: '1', headers: new FrameHeaders([])});
-  
-  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', '2']]), body: writeString('hello')}));
+  const receive = session.receive({ id: '1', headers: new FrameHeaders([]) });
+
+  server.push(ok({ command: 'MESSAGE', headers: new FrameHeaders([['subscription', '2']]), body: writeString('hello') }));
 
   await receive;
 
@@ -776,7 +741,7 @@ test('unhandled message', async() => {
 
   const error = session.getDisconnectError();
 
-  if(!error) {
+  if (!error) {
     expect(error).toBeDefined();
     return;
   }
@@ -785,7 +750,6 @@ test('unhandled message', async() => {
 });
 
 test('receive unhandled message', async () => {
-
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
@@ -793,30 +757,29 @@ test('receive unhandled message', async () => {
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
-  
+  server.push(ok({ command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello') }));
+
   // call receive for another subscription to get the receive loop running
-  session.receive({id: subscription.id + '_different', headers: new FrameHeaders([])});
+  session.receive({ id: subscription.id + '_different', headers: new FrameHeaders([]) });
 
   // FIXME find a more reliable way to synchronise
   await sleep(1);
 
-  result(await session.receive({id: subscription.id, headers: new FrameHeaders([])}));
+  result(await session.receive({ id: subscription.id, headers: new FrameHeaders([]) }));
 });
 
-test('unhandled message after unsubscribe', async() => {
-
+test('unhandled message after unsubscribe', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
   const subscription = result(await session.subscribe('/queue/test'));
 
   await session.unsubscribe(subscription);
-  
-  server.push(ok({command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello')}));
+
+  server.push(ok({ command: 'MESSAGE', headers: new FrameHeaders([['subscription', subscription.id]]), body: writeString('hello') }));
 
   // call receive for another subscription to get the receive loop running
-  await session.receive({id: '2', headers: new FrameHeaders([])});
+  await session.receive({ id: '2', headers: new FrameHeaders([]) });
 
   expect(session.isDisconnected()).toBe(true);
 
@@ -825,6 +788,6 @@ test('unhandled message after unsubscribe', async() => {
   if (!disconnectError) {
     expect(disconnectError).toBeDefined();
   }
-  
+
   expect(disconnectError?.message).toBe('unhandled message');
 });

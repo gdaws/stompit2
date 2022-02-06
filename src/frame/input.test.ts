@@ -2,9 +2,9 @@ import { TextEncoder } from 'util';
 import { Reader } from '../stream/reader';
 import { readFrame, ReadParameters } from './input';
 
-import { 
-  STOMP_VERSION_10, 
-  STOMP_VERSION_11, 
+import {
+  STOMP_VERSION_10,
+  STOMP_VERSION_11,
   STOMP_VERSION_12,
   Frame,
   FrameBodyChunk,
@@ -22,15 +22,15 @@ function reader(value: string): Reader {
 }
 
 function neverResolve(): Promise<void> {
-  return new Promise(() => {});
+  return new Promise(() => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+  });
 }
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
-
   let buffer = Buffer.alloc(0);
 
   for await (const result of body) {
-
     if (failed(result)) {
       return result;
     }
@@ -46,7 +46,6 @@ async function readToString(body: FrameBody): Promise<string> {
 }
 
 async function expectEmptyBody(frame: Frame) {
-
   const body = result(await read(frame.body));
 
   expect(body.length).toBe(0);
@@ -66,29 +65,25 @@ async function parseValid(value: string, params: ReadParameters = someReadParams
 }
 
 describe('readFrame', () => {
-
   test('empty frame', async () => {
-
     const frame = await parseValid('EMPTY\n\n\x00');
 
     expect(frame.command).toBe('EMPTY');
     expect(Array.from(frame.headers)).toHaveLength(0);
-    
+
     await expectEmptyBody(frame);
   });
 
   test('CRLF lines', async () => {
-
     const frame = await parseValid('EMPTY\r\n\r\n\x00');
 
     expect(frame.command).toBe('EMPTY');
     expect(Array.from(frame.headers)).toHaveLength(0);
-    
+
     await expectEmptyBody(frame);
   });
 
   test('repeated header entries', async () => {
-
     const frame = await parseValid('MESSAGE\nfoo: Hello\nfoo: World\n\n\x00');
 
     expect(frame.headers.get('foo')).toBe(' Hello');
@@ -100,7 +95,6 @@ describe('readFrame', () => {
   });
 
   test('typical connect frame', async () => {
-
     const frame = await parseValid('CONNECT\naccept-version:1.2\nhost:stomp.github.org\n\n\x00');
 
     expect(frame.command).toBe('CONNECT');
@@ -111,7 +105,6 @@ describe('readFrame', () => {
   });
 
   test('typical send frame', async () => {
-
     const frame = await parseValid('SEND\ndestination:/queue/a\ncontent-type:text\/plain\n\nhello queue a\n\x00');
 
     expect(frame.command).toBe('SEND');
@@ -119,7 +112,7 @@ describe('readFrame', () => {
     expect(frame.headers.get('content-type')).toBe('text\/plain');
 
     const body = await readToString(frame.body);
-  
+
     expect(body).toBe('hello queue a\n');
   });
 
@@ -130,13 +123,12 @@ describe('readFrame', () => {
   });
 
   test('fixed size body error', async () => {
-    
     const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.'), someReadParams));
 
     const bodyIterator = frame.body;
-    
+
     const bodyResult = (await bodyIterator.next()).value;
-    
+
     if (!bodyResult) {
       expect(bodyResult).toBeDefined();
       return;
@@ -146,22 +138,20 @@ describe('readFrame', () => {
   });
 
   test('dynamic size body read error', async () => {
-
     const frame = result(await readFrame(reader('SEND\n\n...'), someReadParams));
 
     const bodyIterator = frame.body;
-    
+
     const first = (await bodyIterator.next()).value;
 
     expect(first.error).toBeDefined();
   });
 
   test('fixed size body error on NULL byte', async () => {
-
     const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.....'), someReadParams));
 
     const bodyIterator = frame.body;
-    
+
     const first = (await bodyIterator.next()).value;
 
     expect(first.error).toBeUndefined();
@@ -172,11 +162,10 @@ describe('readFrame', () => {
   });
 
   test('fixed size body error no NULL byte', async () => {
-
     const frame = result(await readFrame(reader('SEND\ncontent-length:5\n\n.....A'), someReadParams));
 
     const bodyIterator = frame.body;
-    
+
     const first = (await bodyIterator.next()).value;
 
     expect(first.error).toBeUndefined();
@@ -187,7 +176,6 @@ describe('readFrame', () => {
   });
 
   test('fixed size body with a null character wihin the body', async () => {
-
     const frame = await parseValid('SEND\ncontent-length:3\n\n\x00\x01\x02\x00');
 
     const buffer = result(await read(frame.body));
@@ -197,10 +185,9 @@ describe('readFrame', () => {
     expect(buffer[0]).toBe(0);
     expect(buffer[1]).toBe(1);
     expect(buffer[2]).toBe(2);
-  }); 
+  });
 
   test('multiple frames', async () => {
-
     const source = reader('SEND\n\nfirst\x00SEND\n\nsecond\x00\n\nSEND\n\nthird\x00');
 
     const firstFrame = result(await readFrame(source, someReadParams));
@@ -208,41 +195,37 @@ describe('readFrame', () => {
     expect(await readToString(firstFrame.body)).toBe('first');
 
     const secondFrame = result(await readFrame(source, someReadParams));
-  
+
     expect(await readToString(secondFrame.body)).toBe('second');
-    
+
     const thirdFrame = result(await readFrame(source, someReadParams));
-  
+
     expect(await readToString(thirdFrame.body)).toBe('third');
   });
 
   test('value decoding in protocol version 1.0', async () => {
-
-    const first = await parseValid('SEND\na:b:\\n\\c\n\n\n\x00', {...someReadParams, protocolVersion: STOMP_VERSION_10});
+    const first = await parseValid('SEND\na:b:\\n\\c\n\n\n\x00', { ...someReadParams, protocolVersion: STOMP_VERSION_10 });
 
     expect(first.headers.get('a')).toBe('b:\\n\\c');
   });
 
   test('value decoding in protocol version 1.1', async () => {
+    const first = await parseValid('SEND\nfoo:\\n\\n\\c\\\\\n\n\x00', { ...someReadParams, protocolVersion: STOMP_VERSION_11 });
 
-    const first = await parseValid('SEND\nfoo:\\n\\n\\c\\\\\n\n\x00', {...someReadParams, protocolVersion: STOMP_VERSION_11});
-  
     expect(first.headers.get('foo')).toBe('\n\n:\\');
 
-    const second = await parseValid('SEND\na\\c:b\\n\n\n\x00', {...someReadParams, protocolVersion: STOMP_VERSION_11});
+    const second = await parseValid('SEND\na\\c:b\\n\n\n\x00', { ...someReadParams, protocolVersion: STOMP_VERSION_11 });
 
     expect(second.headers.get('a:')).toBe('b\n');
   });
 
   test('value decoding in protocol version 1.2', async () => {
-
-    const first = await parseValid('SEND\nfoo:\r\\r\\n\\c\\\\\n\n\x00', {...someReadParams, protocolVersion: STOMP_VERSION_12});
+    const first = await parseValid('SEND\nfoo:\r\\r\\n\\c\\\\\n\n\x00', { ...someReadParams, protocolVersion: STOMP_VERSION_12 });
 
     expect(first.headers.get('foo')).toBe('\r\r\n:\\');
   });
 
   test('header completion of partial frame', async () => {
-
     const reader = new Reader((async function* () {
       const encoder = new TextEncoder();
       yield encoder.encode('SEND');
@@ -259,29 +242,25 @@ describe('readFrame', () => {
   });
 
   test('exceed maxLineLength', async () => {
-
-    const result = await readFrame(reader('CONNECT\n'), {...someReadParams, maxLineLength: 4});
+    const result = await readFrame(reader('CONNECT\n'), { ...someReadParams, maxLineLength: 4 });
 
     expect(failed(result) && error(result).message).toBe('maximum line length exceeded');
   });
 
   test('exceed maxLineLength on header line', async () => {
-
-    const result = await readFrame(reader('CONNECT\naweroaiweurapoweiurawerawuera\n'), {...someReadParams, maxLineLength: 10});
+    const result = await readFrame(reader('CONNECT\naweroaiweurapoweiurawerawuera\n'), { ...someReadParams, maxLineLength: 10 });
 
     expect(failed(result) && error(result).message).toBe('maximum line length exceeded');
   });
 
   test('exceed maxHeaderLines', async () => {
-
-    const result = await readFrame(reader('CONNECT\nfoo:a\nfoo:b\nfoo:c\n\n\x00'), {...someReadParams, maxHeaderLines: 2});
+    const result = await readFrame(reader('CONNECT\nfoo:a\nfoo:b\nfoo:c\n\n\x00'), { ...someReadParams, maxHeaderLines: 2 });
 
     expect(failed(result) && error(result).message).toBe('maximum header lines exceeded');
   });
 
   test('exceed maxBodyLength of a dynamic-size body', async () => {
-
-    const frame = await parseValid('SEND\n\nhello\x00', {...someReadParams, maxBodyLength: 1});
+    const frame = await parseValid('SEND\n\nhello\x00', { ...someReadParams, maxBodyLength: 1 });
 
     const body = await read(frame.body);
 
@@ -289,8 +268,7 @@ describe('readFrame', () => {
   });
 
   test('exceed maxBodyLength of a fixed-size body', async () => {
-
-    const frame = await parseValid('SEND\ncontent-length:5\n\nhello\x00', {...someReadParams, maxBodyLength: 1});
+    const frame = await parseValid('SEND\ncontent-length:5\n\nhello\x00', { ...someReadParams, maxBodyLength: 1 });
 
     const body = await read(frame.body);
 
@@ -298,8 +276,7 @@ describe('readFrame', () => {
   });
 
   test('maxBodyChunkLength of a dyanmic-size body', async () => {
-
-    const frame = await parseValid('SEND\n\nhi\x00', {...someReadParams, maxBodyChunkLength: 1});
+    const frame = await parseValid('SEND\n\nhi\x00', { ...someReadParams, maxBodyChunkLength: 1 });
 
     const firstIteration = await frame.body.next();
 
@@ -321,7 +298,7 @@ describe('readFrame', () => {
     expect(chunk2.length).toBe(1);
     expect(chunk2[0]).toBe('i'.charCodeAt(0));
 
-    const thirdIteration =  await frame.body.next();
+    const thirdIteration = await frame.body.next();
 
     expect(thirdIteration.done).toBe(false);
     expect(thirdIteration.value).toBeDefined();
@@ -335,10 +312,9 @@ describe('readFrame', () => {
     expect(fourthIteration.done).toBe(true);
     expect(fourthIteration.value).toBeUndefined();
   });
-  
-  test('maxBodyChunkLength of a fixed-size body', async () => {
 
-    const frame = await parseValid('SEND\ncontent-length:2\n\nhi\x00', {...someReadParams, maxBodyChunkLength: 1});
+  test('maxBodyChunkLength of a fixed-size body', async () => {
+    const frame = await parseValid('SEND\ncontent-length:2\n\nhi\x00', { ...someReadParams, maxBodyChunkLength: 1 });
 
     const firstIteration = await frame.body.next();
 
@@ -360,7 +336,7 @@ describe('readFrame', () => {
     expect(chunk2.length).toBe(1);
     expect(chunk2[0]).toBe('i'.charCodeAt(0));
 
-    const thirdIteration =  await frame.body.next();
+    const thirdIteration = await frame.body.next();
 
     expect(thirdIteration.done).toBe(false);
     expect(thirdIteration.value).toBeDefined();
@@ -376,15 +352,13 @@ describe('readFrame', () => {
   });
 
   test('malformed command line', async () => {
-
-    const result = await readFrame(reader('\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+    const result = await readFrame(reader('\n'), { ...someReadParams, ignoreLeadingEmptyLines: false });
 
     expect(failed(result) && error(result).message).toBe('malformed frame expected command line');
   });
 
   test('malformed header line', async () => {
-
-    const result = await readFrame(reader('CONNECT\ninvalidheader\n'), {...someReadParams, ignoreLeadingEmptyLines: false});
+    const result = await readFrame(reader('CONNECT\ninvalidheader\n'), { ...someReadParams, ignoreLeadingEmptyLines: false });
 
     expect(failed(result) && error(result).message).toBe('header parse error invalidheader');
   });

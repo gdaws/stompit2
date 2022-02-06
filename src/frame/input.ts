@@ -3,13 +3,13 @@ import { FrameHeaders, HeaderLine } from './header';
 import { Reader } from '../stream/reader';
 import { Chunk, decodeString } from '../stream/chunk';
 
-import { 
-  Frame, 
-  ProtocolVersion, 
-  HEADER_CHAR_ENCODING, 
-  STOMP_VERSION_10, 
-  STOMP_VERSION_11, 
-  STOMP_VERSION_12 
+import {
+  Frame,
+  ProtocolVersion,
+  HEADER_CHAR_ENCODING,
+  STOMP_VERSION_10,
+  STOMP_VERSION_11,
+  STOMP_VERSION_12
 } from './protocol';
 
 /**
@@ -29,7 +29,7 @@ export interface ReadLimits {
 
   /**
    * The maximum byte length of a frame body.
-   * 
+   *
    * For unlimited size set `Infinity` value.
    */
   maxBodyLength: number;
@@ -38,7 +38,7 @@ export interface ReadLimits {
    * The maximum byte length of a body chunk read from the transport stream.
    */
   maxBodyChunkLength: number;
-};
+}
 
 /**
  * The parameters object for a readFrame call
@@ -54,16 +54,15 @@ export interface ReadParameters extends ReadLimits {
    * STOMP protocol version of the session
    */
   protocolVersion: ProtocolVersion;
-};
+}
 
 /**
  * Deserialise a frame from an input stream.
- * 
+ *
  * The return value resolves when the header has been deserialised. The caller then reads the body by iterating on the
  * `body` property.
  */
 export async function readFrame(reader: Reader, params: ReadParameters): Promise<Result<Frame>> {
-
   const commandResult = await readCommand(reader, params);
 
   if (failed(commandResult)) {
@@ -75,7 +74,6 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
   const headerLines = [];
 
   for await (const result of readHeaderLines(reader, params)) {
-
     if (failed(result)) {
       return result;
     }
@@ -106,7 +104,6 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
 }
 
 async function readCommand(reader: Reader, params: ReadParameters): Promise<Result<string>> {
-
   const result = await reader.readLine(params.maxLineLength);
 
   if (failed(result)) {
@@ -129,16 +126,14 @@ async function readCommand(reader: Reader, params: ReadParameters): Promise<Resu
 }
 
 async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGenerator<Result<HeaderLine>> {
-
   let count = 0;
 
   while (count++ <= params.maxHeaderLines) {
-
     const result = await reader.readLine(params.maxLineLength);
 
     if (failed(result)) {
       yield result;
-      /* istanbul ignore next */ 
+      /* istanbul ignore next */
       return;
     }
 
@@ -147,14 +142,14 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
     if (0 === line.length) {
       return;
     }
-  
+
     const lineString = decodeString(line, HEADER_CHAR_ENCODING);
 
     const separator = lineString.indexOf(':');
 
     if (-1 === separator) {
       yield fail(new Error('header parse error ' + lineString));
-      /* istanbul ignore next */ 
+      /* istanbul ignore next */
       return;
     }
 
@@ -174,17 +169,15 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
 }
 
 async function* readFixedSizeBody(reader: Reader, contentLength: number, params: ReadParameters): AsyncGenerator<Result<Chunk>> {
-
   if (contentLength > params.maxBodyLength) {
     yield fail(new Error('frame body too large'));
-    /* istanbul ignore next */ 
+    /* istanbul ignore next */
     return;
   }
 
   let remaining = contentLength;
 
   while (remaining > 0) {
-
     const result = await reader.read(Math.min(remaining, params.maxBodyChunkLength));
 
     if (failed(result)) {
@@ -204,7 +197,7 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
   if (failed(endResult)) {
     yield endResult;
-    /* istanbul ignore next */ 
+    /* istanbul ignore next */
     return;
   }
 
@@ -212,7 +205,7 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 
   if (0x0 !== endChunk[0]) {
     yield fail(new Error('expected null byte'));
-    /* istanbul ignore next */ 
+    /* istanbul ignore next */
     return;
   }
 
@@ -220,11 +213,9 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
 }
 
 async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): AsyncGenerator<Result<Chunk>> {
-
   let totalSize = 0;
 
   while (true) {
-
     const result = await reader.readUntil(0x0, params.maxBodyChunkLength);
 
     if (failed(result)) {
@@ -241,13 +232,13 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 
     if (totalSize > params.maxBodyLength) {
       yield fail(new Error('frame body too large'));
-      /* istanbul ignore next */ 
+      /* istanbul ignore next */
       return;
     }
 
     if (ended) {
       yield ok(chunk.slice(0, chunk.length - 1));
-      /* istanbul ignore next */ 
+      /* istanbul ignore next */
       return;
     }
     else {
@@ -257,32 +248,30 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
 }
 
 function decodeEscapeSequence(escapeSequence: string) {
-
   switch (escapeSequence) {
-    case '\\r':
-      return '\r';
-    case '\\n':
-      return '\n';
-    case '\\c':
-      return ':';
-    case '\\\\':
-      return '\\';
-    default:
-      /* istanbul ignore next */ 
-      return escapeSequence;
+  case '\\r':
+    return '\r';
+  case '\\n':
+    return '\n';
+  case '\\c':
+    return ':';
+  case '\\\\':
+    return '\\';
+  default:
+    /* istanbul ignore next */
+    return escapeSequence;
   }
 }
 
 function decodeValue(encoded: string, params: ReadParameters): Result<string> {
-
   switch (params.protocolVersion) {
-    case STOMP_VERSION_10:
-      return ok(encoded);
+  case STOMP_VERSION_10:
+    return ok(encoded);
 
-    case STOMP_VERSION_11:
-      return ok(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
+  case STOMP_VERSION_11:
+    return ok(encoded.replace(/\\n|\\c|\\\\/g, decodeEscapeSequence));
 
-    case STOMP_VERSION_12:
-      return ok(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
+  case STOMP_VERSION_12:
+    return ok(encoded.replace(/\\r|\\n|\\c|\\\\/g, decodeEscapeSequence));
   }
 }

@@ -7,7 +7,6 @@ import { writeEmptyBody, readEmptyBody } from './frame/body';
 import { Queue, createQueue } from './queue';
 
 class MockTransportStream implements TransportStream {
-
   public bytesRead: number;
 
   public bytesWritten: number;
@@ -21,7 +20,6 @@ class MockTransportStream implements TransportStream {
   public closed: boolean;
 
   public constructor() {
-
     this.bytesRead = 0;
     this.bytesWritten = 0;
 
@@ -35,7 +33,6 @@ class MockTransportStream implements TransportStream {
   }
 
   async * [Symbol.asyncIterator]() {
-
     for await (const chunk of this.read[1]) {
       this.bytesRead += chunk.byteLength;
       yield chunk;
@@ -49,7 +46,6 @@ class MockTransportStream implements TransportStream {
   }
 
   write(chunk: Chunk) {
-
     if (this.writeEnded || this.closed) {
       throw new Error('cannot write to stream after writeEnd or close called');
     }
@@ -70,16 +66,15 @@ class MockTransportStream implements TransportStream {
     this.closed = true;
     this.read[0].terminate();
   }
-};
+}
 
 test('frame serialisation', async () => {
-
   const stream = new MockTransportStream();
 
   const client = new StandardTransport(stream, limitDefaults);
-  
+
   const writeError = await client.writeFrame({
-    command: 'CONNECT', 
+    command: 'CONNECT',
     headers: new FrameHeaders([
       ['accept-version', '1.2']
     ]),
@@ -102,7 +97,6 @@ test('frame serialisation', async () => {
 });
 
 test('heartbeat send', async () => {
-
   jest.useFakeTimers();
 
   const clientLimits = {
@@ -117,7 +111,7 @@ test('heartbeat send', async () => {
   const client = new StandardTransport(stream, clientLimits);
 
   await client.writeFrame({
-    command: 'CONNECT', 
+    command: 'CONNECT',
     headers: new FrameHeaders([
       ['accept-version', '1.2']
     ]),
@@ -140,7 +134,6 @@ test('heartbeat send', async () => {
 });
 
 test('heartbeat receive', async () => {
-
   jest.useFakeTimers();
 
   const clientLimits = {
@@ -160,7 +153,7 @@ test('heartbeat receive', async () => {
 
   await readEmptyBody(connectedFrame.body);
 
-  let bytesReadOnConnected = stream.bytesRead;
+  const bytesReadOnConnected = stream.bytesRead;
 
   const readMessage = client.readFrame(STOMP_VERSION_12);
 
@@ -187,7 +180,6 @@ test('heartbeat receive', async () => {
 });
 
 test('session timeout', async () => {
-
   jest.useFakeTimers();
 
   const clientLimits = {
@@ -219,7 +211,6 @@ test('session timeout', async () => {
 });
 
 test('close', async () => {
-
   const stream = new MockTransportStream();
 
   const client = new StandardTransport(stream, limitDefaults);
@@ -233,7 +224,7 @@ test('close', async () => {
   expect(failed(readResult) && error(readResult).message).toBe('session closed');
 
   const writeError = await client.writeFrame({
-    command: 'CONNECT', 
+    command: 'CONNECT',
     headers: new FrameHeaders([
       ['accept-version', '1.2']
     ]),

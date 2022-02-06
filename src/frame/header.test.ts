@@ -13,7 +13,6 @@ beforeEach(() => {
 });
 
 test('iterator', () => {
-
   const iter = headers[Symbol.iterator]();
 
   const first = iter.next();
@@ -38,7 +37,6 @@ test('get', () => {
 });
 
 test('getAll', () => {
-
   const values = headers.getAll('X-foo');
 
   expect(values.length).toBe(2);
@@ -53,7 +51,6 @@ test('has', () => {
 });
 
 test('fromEntries', () => {
-
   const headers = FrameHeaders.fromEntries([
     ['Content-Length', '0'],
     ['Content-Type', 'text/html']
@@ -64,7 +61,6 @@ test('fromEntries', () => {
 });
 
 test('fromMap', () => {
-
   const headers = FrameHeaders.fromMap({
     'Content-Length': '0',
     'Content-Type': 'text/html'
@@ -75,7 +71,6 @@ test('fromMap', () => {
 });
 
 test('concat', () => {
-
   const headers = FrameHeaders.concat(
     FrameHeaders.fromMap({
       'Content-Type': 'first',
@@ -88,7 +83,7 @@ test('concat', () => {
   );
 
   expect(headers.get('Content-Type')).toBe('first');
-  
+
   const lines = headers.getAll('Content-Type');
 
   expect(lines).toHaveLength(2);
@@ -98,7 +93,6 @@ test('concat', () => {
 });
 
 test('merge', () => {
-
   const headers = FrameHeaders.merge(
     FrameHeaders.fromMap({
       'Content-Type': 'first',
@@ -111,7 +105,7 @@ test('merge', () => {
 
   expect(headers.get('Content-Type')).toBe('second');
   expect(headers.get('X-Foo')).toBe('first');
-  
+
   const lines = headers.getAll('Content-Type');
 
   expect(lines).toHaveLength(1);

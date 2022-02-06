@@ -6,23 +6,23 @@ export const RESULT_TIMEOUT = 3;
 export const MESSAGE_RESULT_CANCELLED = 'operation cancelled';
 export const MESSAGE_RESULT_TIMEOUT = 'operation timed out';
 
-export interface ResultStatus { 
+export interface ResultStatus {
   status: number;
-};
+}
 
 export interface OkResult<T> extends ResultStatus {
   status: typeof RESULT_OK;
   value: T;
-};
+}
 
 export interface ErrorResult<E> extends ResultStatus {
   status: typeof RESULT_ERROR;
   error: E;
-};
+}
 
 export interface CancelResult extends ResultStatus {
   status: typeof RESULT_CANCELLED;
-};
+}
 
 export interface TimeoutResult extends ResultStatus {
   status: typeof RESULT_TIMEOUT;
@@ -52,6 +52,7 @@ export function failed<T, E>(result: Result<T, E> | undefined): result is Exclud
   if (!result) {
     return false;
   }
+
   return result.status !== RESULT_OK;
 }
 
@@ -60,7 +61,6 @@ export function cancelled(result: ResultStatus): result is CancelResult {
 }
 
 export function error<T, E extends Error>(result: Exclude<Result<T, E>, OkResult<T>>): Error {
-
   if (result.status === RESULT_ERROR) {
     return result.error;
   }
@@ -77,7 +77,6 @@ export function error<T, E extends Error>(result: Exclude<Result<T, E>, OkResult
 }
 
 export function result<T, E extends Error>(result: Result<T, E>, defaultValue?: T): T {
-
   if (result.status == RESULT_OK) {
     return result.value;
   }
@@ -87,6 +86,6 @@ export function result<T, E extends Error>(result: Result<T, E>, defaultValue?: 
   }
 
   throw error(result);
-};
+}
 
 export type VoidResult<E = Error> = undefined | E;

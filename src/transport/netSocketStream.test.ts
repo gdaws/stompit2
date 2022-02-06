@@ -15,7 +15,6 @@ const listening = new Promise((resolve, reject) => {
 });
 
 const prepareServer = () => {
-
   if (serverClientSocket) {
     serverClientSocket.then(socket => socket.destroy());
   }
@@ -24,17 +23,17 @@ const prepareServer = () => {
     serverClientSocket = undefined;
     return;
   }
-  
+
   serverClientSocket = new Promise((resolve, reject) => {
     if (!serverListeningSocket.listening) {
       reject(new Error('server is not listening'));
     }
+
     serverListeningSocket.once('connection', resolve);
   });
 };
 
 function getConnectOptions(): {port: number, host: string} {
-
   const serverAddress = serverListeningSocket.address();
 
   if (null === serverAddress) {
@@ -52,18 +51,16 @@ function getConnectOptions(): {port: number, host: string} {
 }
 
 function connect(): Promise<[NetSocketStream, NetSocketStream]> {
-
   return new Promise((resolve, reject) => {
-
     const serverAddress = serverListeningSocket.address();
 
     if (null === serverAddress) {
       reject(new Error('server is not listening'));
       return;
     }
-  
+
     let options;
-  
+
     if (typeof serverAddress === 'string') {
       throw new Error('invalid server address');
     }
@@ -75,7 +72,6 @@ function connect(): Promise<[NetSocketStream, NetSocketStream]> {
     }
 
     const client = net.connect(options, () => {
-
       if (!serverClientSocket) {
         reject(new Error('server client socket unprepared'));
         return;
@@ -98,7 +94,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-
   if (serverClientSocket) {
     const socket = await serverClientSocket;
     socket.destroy();
@@ -112,7 +107,6 @@ beforeEach(() => {
 });
 
 test('data transfer', async () => {
-
   const [client, server] = await connect();
 
   const clientWriteError = await client.write(encodeUtf8String('hello server'));
@@ -150,7 +144,6 @@ test('data transfer', async () => {
 });
 
 test('write error', async () => {
-
   const [client, server] = await connect();
 
   if (!serverClientSocket) {
@@ -174,7 +167,6 @@ test('write error', async () => {
 });
 
 test('netConnect', async () => {
-  
   const serverAddress = serverListeningSocket.address();
 
   if (!serverAddress) {
@@ -184,7 +176,7 @@ test('netConnect', async () => {
 
   result(await netConnect(getConnectOptions()));
 
-  const secondConnectResult = await netConnect({...getConnectOptions(), port: 0});
+  const secondConnectResult = await netConnect({ ...getConnectOptions(), port: 0 });
 
   expect(failed(secondConnectResult));
 });

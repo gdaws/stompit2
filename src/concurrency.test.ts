@@ -1,7 +1,6 @@
 import { createSignal } from './concurrency';
 
 test('createSignal', async () => {
-
   const [signalValue, signal] = createSignal<string>();
 
   setImmediate(() => {

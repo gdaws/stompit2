@@ -1,6 +1,6 @@
 
-import { 
-  writeEmptyBody, 
+import {
+  writeEmptyBody,
   readEmptyBody,
   writeString,
   readString,
@@ -17,11 +17,9 @@ import { ok, failed, result, error } from '../result';
 import { createSignal } from '../concurrency';
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
-
   let result = alloc(0);
 
   for await (const chunk of body) {
-
     if (failed(chunk)) {
       return chunk;
     }
@@ -39,18 +37,16 @@ test('writeEmptyBody', async () => {
 });
 
 describe('readEmptyBody', () => {
-
   test('empty body', async () => {
     result(await readEmptyBody(writeEmptyBody()));
   });
-  
+
   test('error', async () => {
     const result = await readEmptyBody(writeError(new Error('fail test')));
     expect(failed(result) && error(result).message).toBe('fail test');
   });
 
   test('non-empty body', async () => {
-
     const createNonEmptyBody = async function *() {
       yield ok(Buffer.alloc(10));
     };
@@ -62,7 +58,6 @@ describe('readEmptyBody', () => {
 });
 
 test('writeError', async () => {
-
   const writeIterator = writeError(new Error('test'));
 
   const writeResult = await writeIterator.next();
@@ -73,7 +68,6 @@ test('writeError', async () => {
 });
 
 test('writeBuffer', async () => {
-
   const writeIterator = writeBuffer(Buffer.from('A'));
 
   const writeResult = await writeIterator.next();
@@ -89,7 +83,6 @@ test('writeBuffer', async () => {
 });
 
 test('writeString', async () => {
-  
   const body = writeString('hello');
 
   const first = await body.next();
@@ -111,29 +104,25 @@ test('writeString', async () => {
 });
 
 test('readString', async () => {
-
   const value = result(await readString(writeString('hello')));
 
   expect(value).toBe('hello');
 });
 
 test('readString error', async () => {
-
   const result = await readString(writeError(new Error('fail')));
-  
+
   expect(failed(result) && error(result).message).toBe('fail');
 });
 
 test('readString unsupported encoding', async () => {
-
   const result = await readString(writeString('hello'), 'unsupported' as any);
 
   expect(failed(result)).toBe(true);
 });
 
 test('readJson', async () => {
-
-  const value = result(await readJson(writeString(`{"a": 1, "b": "hello", "c": [1, 2]}`)));
+  const value = result(await readJson(writeString('{"a": 1, "b": "hello", "c": [1, 2]}')));
 
   expect(typeof value).toBe('object');
   expect(value.a).toBe(1);
@@ -147,12 +136,11 @@ test('readJson read error', async () => {
 });
 
 test('readJson decode error', async () => {
-  const result = await readJson(writeString(`{{{`));
+  const result = await readJson(writeString('{{{'));
   expect(failed(result)).toBe(true);
 });
 
 test('writeJson', async () => {
-
   const expected = {
     a: 'test',
     b: 1
@@ -161,7 +149,7 @@ test('writeJson', async () => {
   const body = writeJson(expected);
 
   const string = result(await read(body));
-  
+
   const actual = JSON.parse(decodeString(string));
 
   expect(actual.a).toBe(expected.a);
@@ -169,7 +157,6 @@ test('writeJson', async () => {
 });
 
 test('writeJson error', async () => {
-
   const writeIterator = writeJson(BigInt(1));
 
   const result = await writeIterator.next();
@@ -178,7 +165,6 @@ test('writeJson error', async () => {
 });
 
 test('createEmitEndDecorator', async () => {
-
   const [signal, emit] = createSignal<Error | void>();
 
   const body = createEmitEndDecorator(writeString('hello'), emit);
@@ -195,7 +181,6 @@ test('createEmitEndDecorator', async () => {
 });
 
 test('createEmitEndDecorator read error', async () => {
-
   const [signal, emit] = createSignal<Error | void>();
 
   const body = createEmitEndDecorator(writeError(new Error('fail')), emit);

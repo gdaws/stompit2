@@ -7,12 +7,11 @@ import { Frame, getAckMode, ProtocolVersion } from '../frame/protocol';
 
 /**
  * A helper function to construct a sendable JSON message.
- * 
- * @param destination 
- * @param content 
+ *
+ * @param destination
+ * @param content
  */
 export function jsonMessage(destination: string, content: any): Frame {
-
   const source = JSON.stringify(content);
 
   const buffer = Buffer.from(source, 'utf-8');
@@ -35,11 +34,10 @@ interface Session extends Receivable {
 
 /**
  * A helper function that discards all messages received on a subscription.
- * 
+ *
  * @param ack The acknowledgement message type to send to the server. Pass null argument to not send any acknowledgements.
  */
 export async function discardMessages(ack: null | 'ack' | 'nack', subscription: Subscription, session: Receivable & AckSendable): Promise<void> {
-
   const messageResult = await session.receive(subscription);
 
   if (failed(messageResult)) {
@@ -59,7 +57,6 @@ export async function discardMessages(ack: null | 'ack' | 'nack', subscription: 
   const messageId = message.headers.get('message-id');
 
   if (null !== ack && undefined !== messageId) {
-
     const mode = subscription.headers.get('ack');
 
     if (mode && mode !== 'auto') {

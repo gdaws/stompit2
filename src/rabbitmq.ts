@@ -7,17 +7,16 @@ import { discardMessages } from './client/message';
 
 /**
  * Send a request message to the RabbitMQ broker and wait for a reply
- * 
+ *
  * @param message The request message
  * @param replyTimeout The number of milliseconds to wait for a reply
  * @param session The ClientSession object
  * @return The reply frame
  */
 export async function request(message: Frame, replyTimeout: number, session: ClientSession): Promise<MessageResult> {
-
   const replyTo = `/temp-queue/request-${session.generateResourceId()}`;
 
-  const subscription = {id: replyTo, headers: new FrameHeaders([['destination', replyTo]])};
+  const subscription = { id: replyTo, headers: new FrameHeaders([['destination', replyTo]]) };
 
   const replyMessage = session.receive(subscription);
 
@@ -44,7 +43,7 @@ export async function request(message: Frame, replyTimeout: number, session: Cli
     clearTimeout(timeout);
   }
 
-  // Because an internal subscription cannot be cancelled we must be prepared 
+  // Because an internal subscription cannot be cancelled we must be prepared
   // to handle any further messages
 
   discardMessages(null, subscription, session);
