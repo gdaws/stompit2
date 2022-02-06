@@ -9,7 +9,8 @@
     "test": "tsc --noEmit && jest --coverage",
     "rabbitmq": "node test/broker/rabbitmq/server.js",
     "activemq": "node test/broker/activemq/server.js",
-    "preversion": "npm test"
+    "preversion": "npm test",
+    "docs": "make docs"
   },
   "engines": {
     "node": ">=12.16.1"

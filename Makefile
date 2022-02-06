@@ -19,7 +19,12 @@ clean:
 
 .PHONY: docs
 docs:
-	npx typedoc
+	npx typedoc \
+	src/index.ts \
+	src/transport/netSocketStream.ts \
+	src/transport/tlsSocketStream.ts \
+	src/transport/webSocketStream.ts \
+	--out docs
 
 .PHONY: publish
 publish:

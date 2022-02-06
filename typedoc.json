@@ -1,6 +1,5 @@
 {
   "exclude": "**/*.test.ts",
   "excludePrivate": true,
-  "excludeNotExported": true,
   "out": "docs"
 }
