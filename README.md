@@ -1,6 +1,6 @@
 # stompit2
 
-[![Build Status](https://travis-ci.com/gdaws/stompit2.svg?branch=master)](https://travis-ci.com/gdaws/stompit2)
+[![Build Status](https://app.travis-ci.com/gdaws/stompit2.svg?branch=master)](https://app.travis-ci.com/gdaws/stompit2)
 [![codecov](https://codecov.io/gh/gdaws/stompit2/branch/master/graph/badge.svg)](https://codecov.io/gh/gdaws/stompit2)
 
 stompit2 is a STOMP client library for Node.js and front-end apps. The most notable feature is the 
