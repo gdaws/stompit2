@@ -61,7 +61,7 @@ export async function* writeString(value: string): FrameBody {
  * @param body The frame body
  * @param encoding The character encoding of the frame body content
  */
-export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-8'): Promise<Result<string>> {
+export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-8', lengthLimit = Infinity): Promise<Result<string>> {
   let decoder;
 
   try {
@@ -85,6 +85,10 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
 
     try {
       result = result + decoder.decode(chunkResult.value, { stream: true });
+
+      if (result.length > lengthLimit) {
+        throw new Error('body length limit exceeded');
+      }
     }
     catch (decodeError) {
       if (decodeError instanceof Error) {

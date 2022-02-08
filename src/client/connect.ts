@@ -1,5 +1,6 @@
 import { ok, fail, failed, Result } from '../result';
 import { FrameHeaders } from '../frame/header';
+import { readString } from '../frame/body';
 
 import {
   Frame,
@@ -11,6 +12,9 @@ import {
 import { Transport } from '../transport';
 import { writeEmptyBody, readEmptyBody } from '../frame/body';
 import { ClientSession } from './session';
+
+const ERROR_RESPONSE_CONTENT_ENCODING = 'utf8';
+const ERROR_RESPONSE_MAX_CONTENT_LENGTH = 1024;
 
 /**
  * Initiate a client session with the server.
@@ -50,34 +54,50 @@ export async function connect(transport: Transport, headers: FrameHeaders): Prom
   const readResult = await transport.readFrame(STOMP_VERSION_10);
 
   if (failed(readResult)) {
+    transport.close();
     return readResult;
   }
 
   const response = readResult.value;
 
   if ('ERROR' === response.command) {
-    return fail(new Error('server sent ERROR frame'));
+    const errorBodyContentType = response.headers.get('content-type');
+
+    if (errorBodyContentType === 'text/plain') {
+      const serverErrorMessageResult = await readString(response.body, ERROR_RESPONSE_CONTENT_ENCODING, ERROR_RESPONSE_MAX_CONTENT_LENGTH);
+      if (!failed(serverErrorMessageResult)) {
+        transport.close();
+        return fail(new Error(serverErrorMessageResult.value));
+      }
+    }
+
+    transport.close();
+    return fail(new Error('server replied with ERROR frame on CONNECT request'));
   }
 
   if ('CONNECTED' !== response.command) {
-    return fail(new Error(`server sent ${response.command.substring(0, 31)} frame`))
+    transport.close();
+    return fail(new Error(`server sent ${response.command.substring(0, 31)} frame`));
   }
 
   const versionString = response.headers.get('version');
 
   if (undefined === versionString) {
+    transport.close();
     return fail(new Error('server sent CONNECTED frame without including version header'));
   }
 
   const version = supportedProtocolVersion(versionString);
 
   if (!version) {
+    transport.close();
     return fail(new Error('protocol version unsupported'));
   }
 
   const bodyResult = await readEmptyBody(response.body);
 
   if (failed(bodyResult)) {
+    transport.close();
     return bodyResult;
   }
 
