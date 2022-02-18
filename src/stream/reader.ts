@@ -1,4 +1,5 @@
-import { Result, ok, fail } from '../result';
+import { Result, ok, fail, errorCode } from '../result';
+import { StompitError } from '../error';
 import { Chunk, ChunkStream, alloc, concatPair } from './chunk';
 
 enum ReadStatus {
@@ -23,7 +24,7 @@ interface ReadCompleted extends ReadOperationResult {
 
 interface ReadError extends ReadOperationResult {
   readonly status: typeof ReadStatus.Error;
-  readonly error: Error;
+  readonly error: StompitError;
 }
 
 const continued = (): ReadContinued => ({
@@ -38,7 +39,7 @@ const completed = (consume: number, skip: number): ReadCompleted => ({
 
 type ReadOperation = (buffer: Chunk) => ReadContinued | ReadCompleted | ReadError;
 
-export type ReadResult = Result<Chunk>;
+export type ReadResult = Result<Chunk, StompitError>;
 
 export class Reader {
   private stream: ChunkStream;
@@ -57,11 +58,11 @@ export class Reader {
 
   public readRange(minBytes: number, maxBytes: number): Promise<ReadResult> {
     if (minBytes < 1) {
-      return Promise.resolve(fail(new Error('invalid minBytes parameter')));
+      return Promise.resolve(errorCode('OperationError', 'invalid minBytes parameter'));
     }
 
     if (maxBytes < minBytes) {
-      return Promise.resolve(fail(new Error('invalid maxBytes parameter')));
+      return Promise.resolve(errorCode('OperationError', 'invalid maxBytes parameter'));
     }
 
     return this.run(
@@ -95,7 +96,7 @@ export class Reader {
         if (buffer.length > maxLength) {
           return {
             status: ReadStatus.Error,
-            error: new Error('maximum line length exceeded')
+            error: new StompitError('ProtocolViolation', 'maximum line length exceeded')
           };
         }
 
@@ -126,7 +127,7 @@ export class Reader {
 
   private async run(operation: ReadOperation): Promise<ReadResult> {
     if (this.running) {
-      return fail(new Error('read operation already running'));
+      return errorCode('OperationError', 'read operation already running');
     }
 
     this.running = true;
@@ -152,12 +153,7 @@ export class Reader {
         }
       }
       catch (error) {
-        if (error instanceof Error) {
-          return fail(error);
-        }
-        else {
-          throw new Error('');
-        }
+        return errorCode('TransportFailure', error instanceof Error ? error.message : 'unknown error');
       }
     }
 
@@ -166,7 +162,7 @@ export class Reader {
     switch (result.status) {
       case ReadStatus.Continued: {
         if (streamEnded) {
-          return fail(new Error('unexpected end of stream'));
+          return errorCode('TransportFailure', 'unexpected end of stream');
         }
 
         return this.runProper(operation, true);

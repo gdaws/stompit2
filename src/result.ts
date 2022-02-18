@@ -1,3 +1,5 @@
+import { ErrorCode, StompitError } from './error';
+
 export const RESULT_OK = 0;
 export const RESULT_ERROR = 1;
 export const RESULT_CANCELLED = 2;
@@ -28,7 +30,7 @@ export interface TimeoutResult extends ResultStatus {
   status: typeof RESULT_TIMEOUT;
 }
 
-export type Result<T, E = Error> = OkResult<T> | ErrorResult<E> | CancelResult | TimeoutResult;
+export type Result<T, E extends StompitError = StompitError> = OkResult<T> | ErrorResult<E> | CancelResult | TimeoutResult;
 
 /**
  * Construct a success result
@@ -48,7 +50,11 @@ export function fail<ErrorType>(error: ErrorType): ErrorResult<ErrorType> {
   return { status: RESULT_ERROR, error };
 }
 
-export function failed<T, E>(result: Result<T, E> | undefined): result is Exclude<Result<T, E>, OkResult<T>> {
+export function errorCode(value: ErrorCode, message: string): ErrorResult<StompitError> {
+  return { status: RESULT_ERROR, error: new StompitError(value, message) };
+}
+
+export function failed<T, E extends StompitError>(result: Result<T, E> | undefined): result is Exclude<Result<T, E>, OkResult<T>> {
   if (!result) {
     return false;
   }
@@ -60,23 +66,23 @@ export function cancelled(result: ResultStatus): result is CancelResult {
   return result.status === RESULT_CANCELLED;
 }
 
-export function error<T, E extends Error>(result: Exclude<Result<T, E>, OkResult<T>>): Error {
+export function error<T, E extends StompitError>(result: Exclude<Result<T, E>, OkResult<T>>): StompitError {
   if (result.status === RESULT_ERROR) {
     return result.error;
   }
 
   if (result.status === RESULT_CANCELLED) {
-    return new Error(MESSAGE_RESULT_CANCELLED);
+    return new StompitError('OperationCancelled', MESSAGE_RESULT_CANCELLED);
   }
 
   if (result.status === RESULT_TIMEOUT) {
-    return new Error(MESSAGE_RESULT_TIMEOUT);
+    return new StompitError('OperationTimeout', MESSAGE_RESULT_TIMEOUT);
   }
 
-  return new Error('unhandled result status');
+  return new StompitError('OperationError', 'unknown status');
 }
 
-export function result<T, E extends Error>(result: Result<T, E>, defaultValue?: T): T {
+export function result<T, E extends StompitError>(result: Result<T, E>, defaultValue?: T): T {
   if (result.status == RESULT_OK) {
     return result.value;
   }
@@ -88,4 +94,4 @@ export function result<T, E extends Error>(result: Result<T, E>, defaultValue?: 
   throw error(result);
 }
 
-export type VoidResult<E = Error> = undefined | E;
+export type VoidResult<E = StompitError> = undefined | E;

@@ -1,4 +1,5 @@
 import { Result, ok, failed, error } from '../result';
+import { StompitError } from '../error';
 import { allocUnsafe, encodeUtf8String } from '../stream/chunk';
 import { Writer } from '../stream/writer';
 
@@ -41,7 +42,7 @@ export interface WriteParameters extends WriteLimits {
  * A single write operation is made if the serialised frame is small enough to fit in the internal buffer, otherwise
  * a write operation is made for the header and then a write operation per iteration of the body chunks.
  */
-export async function writeFrame(frame: Frame, writer: Writer, params: WriteParameters): Promise<Error | undefined> {
+export async function writeFrame(frame: Frame, writer: Writer, params: WriteParameters): Promise<StompitError | undefined> {
   let buffer = allocUnsafe(params.bufferSize);
   let writeEnd = buffer.length;
 
@@ -59,8 +60,8 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
     if (name.toLowerCase() === 'content-length') {
       expectedContentLength = Number.parseInt(value, 10);
 
-      if(Number.isNaN(expectedContentLength) || expectedContentLength < 0) {
-        return new Error('invalid content-length header');
+      if (Number.isNaN(expectedContentLength) || expectedContentLength < 0) {
+        return new StompitError('ProtocolViolation', 'invalid content-length header');
       }
     }
 
@@ -113,7 +114,7 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
       contentLength += chunk.length;
 
       if (contentLength > expectedContentLength) {
-        return new Error('incorrect content-length header');
+        return new StompitError('ProtocolViolation', 'incorrect content-length header');
       }
 
       buffer.set(chunk, written);
@@ -122,7 +123,7 @@ export async function writeFrame(frame: Frame, writer: Writer, params: WritePara
     }
 
     if (contentLength !== expectedContentLength) {
-      return new Error('incorrect content-length header');
+      return new StompitError('ProtocolViolation', 'incorrect content-length header');
     }
 
     buffer[written] = NUL;
@@ -192,7 +193,7 @@ function encodeEscapeSequence(value: string) {
   }
 }
 
-function encodeValue(decoded: string, params: WriteParameters): Result<string> {
+function encodeValue(decoded: string, params: WriteParameters): Result<string, StompitError> {
   switch (params.protocolVersion) {
     case STOMP_VERSION_10:
       return ok(decoded);

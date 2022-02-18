@@ -1,4 +1,5 @@
-import { Result, VoidResult, ok, fail, failed, error } from './result';
+import { Result, VoidResult, ok, fail, failed, error, errorCode } from './result';
+import { StompitError } from './error';
 import { Chunk } from './stream/chunk';
 import { Reader } from './stream/reader';
 import { ReadLimits, readFrame } from './frame/input';
@@ -35,13 +36,13 @@ export interface Transport {
    *
    * The STOMP session implementation must not call this function before the previous frame's body has been fully read.
    */
-  readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame>>;
+  readFrame(protocolVersion: ProtocolVersion): Promise<Result<Frame, StompitError>>;
 
   /**
    * Send the next outgoing frame. The return value resolves once the frame has been fully serialised and sent for
    * transmission.
    */
-  writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined>;
+  writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<StompitError | undefined>;
 
   /**
    * Close the connection.
@@ -136,15 +137,13 @@ export interface TransportStream extends AsyncIterable<Chunk> {
 }
 
 const ERROR_SESSION_TIMEOUT = 'session timeout';
-const ERROR_SESSION_CLOSED = 'session closed';
-const ERROR_SESSION_ALREADY_STARTED = 'session already started';
 
 /**
  * A transport implementation that serialises frames in the standard format and observes the standard protocol.
  */
 export class StandardTransport implements Transport {
   private stream: TransportStream;
-  private streamError: Error | undefined;
+  private streamError: StompitError | undefined;
 
   private reader: Reader;
 
@@ -192,7 +191,7 @@ export class StandardTransport implements Transport {
    */
   public async readFrame(protocolVersion: ProtocolVersion) {
     if (this.sessionClosed) {
-      return fail(this.streamError ? this.streamError : new Error(ERROR_SESSION_CLOSED));
+      return errorCode('TransportFailure', 'session is closed');
     }
 
     const params = {
@@ -229,7 +228,7 @@ export class StandardTransport implements Transport {
    */
   public async writeFrame(frame: Frame, protocolVersion: ProtocolVersion) {
     if (this.sessionClosed) {
-      return this.streamError ? this.streamError : new Error(ERROR_SESSION_CLOSED);
+      return new StompitError('TransportFailure', 'session is closed');
     }
 
     const params = {
@@ -240,7 +239,7 @@ export class StandardTransport implements Transport {
     switch (frame.command) {
       case 'CONNECT': {
         if (this.sessionStarted) {
-          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+          return this.failStream(new StompitError('ProtocolViolation', 'client sent multiple CONNECT frames')).error;
         }
 
         if (frame.headers.has('heart-beat')) {
@@ -264,7 +263,7 @@ export class StandardTransport implements Transport {
 
       case 'CONNECTED': {
         if (this.sessionStarted) {
-          return this.failStream(new Error(ERROR_SESSION_ALREADY_STARTED)).error;
+          return this.failStream(new StompitError('ProtocolViolation', 'server sent multiple CONNECTED frames')).error;
         }
 
         this.sessionStarted = true;
@@ -298,7 +297,7 @@ export class StandardTransport implements Transport {
     return result;
   }
 
-  private failStream(error: Error) {
+  private failStream(error: StompitError) {
     if (this.streamError) {
       return fail(this.streamError);
     }
@@ -343,7 +342,7 @@ export class StandardTransport implements Transport {
     })();
   }
 
-  private startHeartBeat(headers: FrameHeaders, monitor = true): Result<[number, number]> {
+  private startHeartBeat(headers: FrameHeaders, monitor = true): Result<[number, number], StompitError> {
     const heartBeatString = headers.get('heart-beat');
 
     if (undefined === heartBeatString) {
@@ -353,7 +352,7 @@ export class StandardTransport implements Transport {
     const heartBeatTokens = heartBeatString.match(/^(\d+),(\d+)$/);
 
     if (null === heartBeatTokens) {
-      return fail(new Error('invalid heart-beat header'));
+      return errorCode('ProtocolViolation', 'invalid heart-beat header');
     }
 
     const remoteWriteRate = parseInt(heartBeatTokens[1], 10);
@@ -386,7 +385,7 @@ export class StandardTransport implements Transport {
       const bytesRead = this.stream.bytesRead;
 
       if (bytesRead === lastBytesRead) {
-        this.failStream(new Error(ERROR_SESSION_TIMEOUT));
+        this.failStream(new StompitError('TransportFailure', ERROR_SESSION_TIMEOUT));
         return;
       }
 

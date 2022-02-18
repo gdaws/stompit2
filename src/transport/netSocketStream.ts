@@ -1,5 +1,6 @@
 import { Socket, SocketConnectOpts, createConnection } from 'net';
 import { Result, ok, fail } from '../result';
+import { StompitError } from '../error';
 import { Chunk } from '../stream/chunk';
 import { VoidResult } from '../result';
 
@@ -37,7 +38,7 @@ export class NetSocketStream implements TransportStream {
     return new Promise((resolve) => {
       this.socket.write(chunk, (error) => {
         if (error) {
-          resolve(error);
+          resolve(new StompitError('TransportFailure', error.message));
           return;
         }
 
@@ -66,7 +67,7 @@ export function netConnect(options: SocketConnectOpts, limits?: Partial<Transpor
       resolve(ok(new StandardTransport(stream, { ...limitDefaults, ...(limits || {}) })));
     });
     socket.once('error', (error) => {
-      resolve(fail(error));
+      resolve(fail(new StompitError('TransportFailure', error.message)));
     });
   });
 }

@@ -1,4 +1,5 @@
 import { Result } from '../result';
+import { StompitError } from '../error';
 import { Chunk } from '../stream/chunk';
 import { FrameHeaders } from './header';
 
@@ -33,7 +34,7 @@ export function supportedProtocolVersion(version: any): ProtocolVersion | undefi
   return versions[index];
 }
 
-export type FrameBodyChunk = Result<Chunk>;
+export type FrameBodyChunk = Result<Chunk, StompitError>;
 export type FrameBody = AsyncGenerator<FrameBodyChunk>;
 
 /**

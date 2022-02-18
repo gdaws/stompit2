@@ -5,13 +5,13 @@ import {
 } from '../frame/protocol';
 
 import { FrameHeaders } from '../frame/header';
+import { readServerError } from '../frame/error';
 
 import {
   ok,
   cancel,
   fail,
   failed,
-  error,
   Result,
   VoidResult,
   CancelResult
@@ -40,9 +40,9 @@ export type MessageResult = Result<Frame> | CancelResult;
 type MessageCallback = (result: MessageResult) => void;
 
 import { RECEIPT_NOT_REQUESTED, RECEIPT_DEFAULT_TIMEOUT } from './receipt';
+import { StompitError } from '../error';
 
 const ERROR_DISCONNECTED = 'session disconnected';
-const ERROR_INTERRUPTED = 'operation interrupted';
 const ERROR_RECEIPT_TIMEOUT = 'receipt timeout';
 
 interface ReceiptRequest {
@@ -88,6 +88,8 @@ export interface AckSendable {
   nack(messageId: string, transactionId: string | undefined, receiptTimeout: number): Promise<SendResult>;
 }
 
+export type SessionErrorListener = (error: StompitError) => void;
+
 /**
  *
  *
@@ -109,7 +111,6 @@ export class ClientSession implements Receivable, AckSendable {
   private transport: Transport;
 
   private disconnected: boolean;
-  private disconnectError: Error | undefined;
 
   private shutdownCalled: boolean;
 
@@ -131,6 +132,8 @@ export class ClientSession implements Receivable, AckSendable {
   private nextResourceId: number;
   private nextReceiptSeq: number;
 
+  private errorListener: SessionErrorListener | undefined;
+
   /**
    *
    * This constructor is for internal use. Instead use the {@link connect} function to create a ClientSession
@@ -146,7 +149,6 @@ export class ClientSession implements Receivable, AckSendable {
     this.transport = transport;
 
     this.disconnected = false;
-    this.disconnectError = undefined;
 
     this.shutdownCalled = false;
 
@@ -175,18 +177,15 @@ export class ClientSession implements Receivable, AckSendable {
     return this.protocolVersion;
   }
 
+  public setErrorListener(callback: SessionErrorListener) {
+    this.errorListener = callback;
+  }
+
   /**
    * Returns `true` if the session is disconnected
    */
   public isDisconnected(): boolean {
     return this.disconnected;
-  }
-
-  /**
-   * Returns a Error object representing the error that caused the session to disconnect
-   */
-  public getDisconnectError(): Error | undefined {
-    return this.disconnectError;
   }
 
   /**
@@ -432,7 +431,7 @@ export class ClientSession implements Receivable, AckSendable {
    *
    * The recommended method for closing a session is {@link disconnect}.
    */
-  public shutdown(error?: Error | undefined) {
+  public shutdown() {
     if (this.shutdownCalled) {
       return;
     }
@@ -441,13 +440,11 @@ export class ClientSession implements Receivable, AckSendable {
 
     this.disconnected = true;
 
-    this.disconnectError = error;
+    const sessionClosedError = new StompitError('SessionClosed', 'session closed: operation cancelled');
 
-    const operationError = new Error(this.disconnected ? ERROR_DISCONNECTED : ERROR_INTERRUPTED);
+    this.shutdownSendRequests(sessionClosedError);
 
-    this.shutdownSendRequests(operationError);
-
-    this.shutdownReceiveRequests(operationError);
+    this.shutdownReceiveRequests(sessionClosedError);
 
     this.transport.close();
   }
@@ -472,7 +469,7 @@ export class ClientSession implements Receivable, AckSendable {
     const missingHeader = frame.headers.required(...(requiredHeaders[frame.command] || []));
 
     if (missingHeader) {
-      return Promise.resolve(missingHeader);
+      return Promise.resolve(new StompitError('ProtocolViolation', missingHeader.message));
     }
 
     return new Promise((resolve) => {
@@ -488,7 +485,7 @@ export class ClientSession implements Receivable, AckSendable {
 
   private sendLoop(framePrototype: Frame, receiptTimeout: number, callback: SendFrameCallback) {
     if (this.disconnected) {
-      callback(new Error(ERROR_DISCONNECTED));
+      callback(new StompitError('TransportFailure', ERROR_DISCONNECTED));
 
       this.sendLoopRunning = false;
       return;
@@ -522,11 +519,9 @@ export class ClientSession implements Receivable, AckSendable {
 
           delete this.receiptRequests[receiptId];
 
-          if ('DISCONNECT' === frame.command) {
-            this.shutdown(new Error('disconnect receipt timeout'));
-          }
+          const error = new StompitError('OperationTimeout', ERROR_RECEIPT_TIMEOUT);
 
-          request.callback(new Error(ERROR_RECEIPT_TIMEOUT));
+          request.callback(error);
         }, receiptTimeout)
       };
 
@@ -539,13 +534,21 @@ export class ClientSession implements Receivable, AckSendable {
 
     this.transport.writeFrame(frame, this.protocolVersion).then((error) => {
       if (error) {
-        this.shutdown(error);
-
-        // If a receipt was requested then the callback was invoked in the shutdown call
-
-        if (RECEIPT_NOT_REQUESTED === receiptTimeout) {
-          callback(new Error(ERROR_DISCONNECTED));
+        if (RECEIPT_NOT_REQUESTED !== receiptTimeout) {
+          const receiptId = frame.headers.get('receipt');
+          if (receiptId) {
+            const receiptRequest = this.receiptRequests[receiptId];
+            if (receiptRequest) {
+              clearTimeout(receiptRequest.timeout);
+              delete this.receiptRequests[receiptId];
+            }
+          }
         }
+
+        callback(error);
+
+        this.notifyErrorListener(error);
+        this.shutdown();
 
         this.sendLoopRunning = false;
 
@@ -591,7 +594,7 @@ export class ClientSession implements Receivable, AckSendable {
     const readFrameResult = await this.transport.readFrame(this.protocolVersion);
 
     if (failed(readFrameResult)) {
-      return this.shutdown(error(readFrameResult));
+      return this.shutdown();
     }
 
     const frame = readFrameResult.value;
@@ -604,7 +607,9 @@ export class ClientSession implements Receivable, AckSendable {
         const subscriptionId = frame.headers.get('subscription');
 
         if (!subscriptionId) {
-          return this.shutdown(new Error('server sent MESSAGE frame without including a subscription header'));
+          const error = new StompitError('ProtocolViolation', 'server sent MESSAGE frame without including a subscription header');
+          this.notifyErrorListener(error);
+          return this.shutdown();
         }
 
         const callback = this.messageRequests[subscriptionId];
@@ -625,7 +630,9 @@ export class ClientSession implements Receivable, AckSendable {
             this.unhandledMessage = message;
           }
           else {
-            return this.shutdown(new Error('unhandled message'));
+            const error = new StompitError('ProtocolViolation', 'unhandled message');
+            this.notifyErrorListener(error);
+            return this.shutdown();
           }
         }
 
@@ -640,13 +647,15 @@ export class ClientSession implements Receivable, AckSendable {
         const readBodyResult = await readEmptyBody(frame.body);
 
         if (failed(readBodyResult)) {
-          return this.shutdown(error(readBodyResult));
+          return this.shutdown();
         }
 
         const receiptId = frame.headers.get('receipt-id');
 
         if (!receiptId) {
-          return this.shutdown(new Error('server sent RECEIPT frame without a receipt-id header'));
+          const error = new StompitError('ProtocolViolation', 'server sent RECEIPT frame without a receipt-id header');
+          this.notifyErrorListener(error);
+          return this.shutdown();
         }
 
         this.receiveFrameRequests -= 1;
@@ -657,7 +666,9 @@ export class ClientSession implements Receivable, AckSendable {
       }
 
       case 'ERROR':
-        return this.shutdown(new Error('server sent ERROR frame'));
+        const serverError = await readServerError(frame);
+        this.notifyErrorListener(serverError);
+        return this.shutdown();
     }
   }
 
@@ -687,7 +698,13 @@ export class ClientSession implements Receivable, AckSendable {
     return true;
   }
 
-  private shutdownSendRequests(error: Error) {
+  private notifyErrorListener(error: StompitError) {
+    if (this.errorListener) {
+      this.errorListener(error);
+    }
+  }
+
+  private shutdownSendRequests(error: StompitError) {
     this.sendQueue.forEach(([_frame, _timeout, callback]) => {
       callback(error);
     });
@@ -695,7 +712,7 @@ export class ClientSession implements Receivable, AckSendable {
     this.sendQueue = [];
   }
 
-  private shutdownReceiveRequests(error: Error) {
+  private shutdownReceiveRequests(error: StompitError) {
     this.subscriptions.clear();
 
     const receiptRequests = this.receiptRequests;
@@ -711,9 +728,7 @@ export class ClientSession implements Receivable, AckSendable {
       request.callback(error);
     });
 
-    const messageRequestResult = this.disconnectError ? fail(error) : cancel();
-
-    Object.values(messageRequests).forEach(callback => callback(messageRequestResult));
+    Object.values(messageRequests).forEach(callback => callback(fail(error)));
   }
 
   private observeSendCompletion(frame: Frame) {

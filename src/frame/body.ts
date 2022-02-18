@@ -1,5 +1,6 @@
 import { TextDecoder } from 'util';
 import { ok, fail, failed, error, Result } from '../result';
+import { StompitError } from '../error';
 import { TextEncoding, encodeUtf8String } from '../stream/chunk';
 import { SignalEmitter } from '../concurrency';
 import { FrameBody } from './protocol';
@@ -10,7 +11,7 @@ import { FrameBody } from './protocol';
  *
  * @param error The error object to encapsulate in the fail result
  */
-export async function* writeError(error: Error): FrameBody {
+export async function* writeError(error: StompitError): FrameBody {
   yield fail(error);
 }
 
@@ -27,14 +28,14 @@ export async function* writeEmptyBody(): FrameBody {
  *
  * @param body The frame body
  */
-export async function readEmptyBody(body: FrameBody): Promise<Result<undefined>> {
+export async function readEmptyBody(body: FrameBody): Promise<Result<undefined, StompitError>> {
   for await (const chunkResult of body) {
     if (failed(chunkResult)) {
       return chunkResult;
     }
 
     if (chunkResult.value.length > 0) {
-      return fail(new Error('expected empty body'));
+      return fail(new StompitError('ProtocolViolation', 'expected empty body'));
     }
   }
 
@@ -61,19 +62,14 @@ export async function* writeString(value: string): FrameBody {
  * @param body The frame body
  * @param encoding The character encoding of the frame body content
  */
-export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-8', lengthLimit = Infinity): Promise<Result<string>> {
+export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-8', lengthLimit = Infinity): Promise<Result<string, StompitError>> {
   let decoder;
 
   try {
     decoder = new TextDecoder(encoding);
   }
   catch (error) {
-    if (error instanceof Error) {
-      return fail(error);
-    }
-    else {
-      return fail(new Error('TextDecoder object instantiation error'));
-    }
+    return fail(new StompitError('ProtocolViolation', error instanceof Error ? `frame body text decoding failed: ${error.message}` : 'frame body text decoding failed'));
   }
 
   let result = '';
@@ -87,16 +83,11 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
       result = result + decoder.decode(chunkResult.value, { stream: true });
 
       if (result.length > lengthLimit) {
-        throw new Error('body length limit exceeded');
+        return fail(new StompitError('ProtocolViolation', `body length limit exceeded (${lengthLimit} bytes)`));
       }
     }
     catch (decodeError) {
-      if (decodeError instanceof Error) {
-        return fail(decodeError);
-      }
-      else {
-        return fail(new Error('text decode error'));
-      }
+      return fail(new StompitError('ProtocolViolation', decodeError instanceof Error ? `frame body text decoding failed: ${decodeError.message}` : 'frame body text decoding failed'));
     }
   }
 
@@ -104,12 +95,7 @@ export async function readString(body: FrameBody, encoding: TextEncoding = 'utf-
     result = result + decoder.decode();
   }
   catch (decodeError) {
-    if (decodeError instanceof Error) {
-      return fail(decodeError);
-    }
-    else {
-      return fail(new Error('text decode error'));
-    }
+    return fail(new StompitError('ProtocolViolation', decodeError instanceof Error ? `frame body text decoding failed: ${decodeError.message}` : 'frame body text decoding failed'));
   }
 
   return ok(result);
@@ -126,12 +112,7 @@ export function writeJson(value: any): FrameBody {
     return writeString(JSON.stringify(value));
   }
   catch (error) {
-    if (error instanceof Error) {
-      return writeError(error);
-    }
-    else {
-      return writeError(new Error('json serialize error'));
-    }
+    return writeError(new StompitError('ProtocolViolation', error instanceof Error ? `json serialize failed: ${error.message}` : 'json serialization error'));
   }
 }
 
@@ -143,7 +124,7 @@ export function writeJson(value: any): FrameBody {
  * @return The parsed JSON value
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'): Promise<Result<any>> {
+export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'): Promise<Result<any, StompitError>> {
   const string = await readString(body, encoding);
 
   if (failed(string)) {
@@ -155,12 +136,7 @@ export async function readJson(body: FrameBody, encoding: TextEncoding = 'utf-8'
     return ok(value);
   }
   catch (jsonParseError) {
-    if (jsonParseError instanceof Error) {
-      return fail(jsonParseError);
-    }
-    else {
-      return fail(new Error('json parse error'));
-    }
+    return fail(new StompitError('ProtocolViolation', jsonParseError instanceof Error ? `json parse error: ${jsonParseError.message}` : 'json parse error'))
   }
 }
 

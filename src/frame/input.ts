@@ -1,4 +1,5 @@
 import { Result, ok, fail, failed } from '../result';
+import { StompitError } from '../error';
 import { FrameHeaders, HeaderLine } from './header';
 import { Reader } from '../stream/reader';
 import { Chunk, decodeString } from '../stream/chunk';
@@ -62,7 +63,7 @@ export interface ReadParameters extends ReadLimits {
  * The return value resolves when the header has been deserialised. The caller then reads the body by iterating on the
  * `body` property.
  */
-export async function readFrame(reader: Reader, params: ReadParameters): Promise<Result<Frame>> {
+export async function readFrame(reader: Reader, params: ReadParameters): Promise<Result<Frame, StompitError>> {
   const commandResult = await readCommand(reader, params);
 
   if (failed(commandResult)) {
@@ -103,7 +104,7 @@ export async function readFrame(reader: Reader, params: ReadParameters): Promise
   });
 }
 
-async function readCommand(reader: Reader, params: ReadParameters): Promise<Result<string>> {
+async function readCommand(reader: Reader, params: ReadParameters): Promise<Result<string, StompitError>> {
   const result = await reader.readLine(params.maxLineLength);
 
   if (failed(result)) {
@@ -118,14 +119,14 @@ async function readCommand(reader: Reader, params: ReadParameters): Promise<Resu
       return await readCommand(reader, params);
     }
     else {
-      return fail(new Error('malformed frame expected command line'));
+      return fail(new StompitError('ProtocolViolation', 'malformed frame expected command line'));
     }
   }
 
   return ok(decodeString(line, HEADER_CHAR_ENCODING));
 }
 
-async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGenerator<Result<HeaderLine>> {
+async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGenerator<Result<HeaderLine, StompitError>> {
   let count = 0;
 
   while (count++ <= params.maxHeaderLines) {
@@ -148,7 +149,7 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
     const separator = lineString.indexOf(':');
 
     if (-1 === separator) {
-      yield fail(new Error('header parse error ' + lineString));
+      yield fail(new StompitError('ProtocolViolation', 'header parse error ' + lineString));
       /* istanbul ignore next */
       return;
     }
@@ -157,7 +158,7 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
     const valueDecodeResult = decodeValue(lineString.substring(separator + 1), params);
 
     if (failed(nameDecodeResult) || failed(valueDecodeResult)) {
-      yield fail(new Error('header value decode error'));
+      yield fail(new StompitError('ProtocolViolation', 'header value decode error'));
       /* istanbul ignore next */
       return;
     }
@@ -165,12 +166,12 @@ async function* readHeaderLines(reader: Reader, params: ReadParameters): AsyncGe
     yield ok([nameDecodeResult.value, valueDecodeResult.value]);
   }
 
-  yield fail(new Error('maximum header lines exceeded'));
+  yield fail(new StompitError('ProtocolViolation', 'maximum header lines exceeded'));
 }
 
 async function* readFixedSizeBody(reader: Reader, contentLength: number, params: ReadParameters): AsyncGenerator<Result<Chunk>> {
   if (contentLength > params.maxBodyLength) {
-    yield fail(new Error('frame body too large'));
+    yield fail(new StompitError('ProtocolViolation', 'frame body too large'));
     /* istanbul ignore next */
     return;
   }
@@ -204,7 +205,7 @@ async function* readFixedSizeBody(reader: Reader, contentLength: number, params:
   const endChunk = endResult.value;
 
   if (0x0 !== endChunk[0]) {
-    yield fail(new Error('expected null byte'));
+    yield fail(new StompitError('ProtocolViolation', 'expected null byte'));
     /* istanbul ignore next */
     return;
   }
@@ -231,7 +232,7 @@ async function* readDynamicSizeBody(reader: Reader, params: ReadParameters): Asy
     totalSize += chunk.length + (ended ? -1 : 0);
 
     if (totalSize > params.maxBodyLength) {
-      yield fail(new Error('frame body too large'));
+      yield fail(new StompitError('ProtocolViolation', 'frame body too large'));
       /* istanbul ignore next */
       return;
     }
@@ -258,7 +259,7 @@ function decodeEscapeSequence(escapeSequence: string) {
     case '\\\\':
       return '\\';
     default:
-    /* istanbul ignore next */
+      /* istanbul ignore next */
       return escapeSequence;
   }
 }
