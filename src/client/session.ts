@@ -500,7 +500,7 @@ export class ClientSession implements Receivable, AckSendable {
 
   private sendLoop(framePrototype: Frame, receiptTimeout: number, callback: SendFrameCallback) {
     if (this.disconnected) {
-      callback(new StompitError('TransportFailure', ERROR_DISCONNECTED));
+      callback(new StompitError('SessionClosed', ERROR_DISCONNECTED));
 
       this.sendLoopRunning = false;
       return;
