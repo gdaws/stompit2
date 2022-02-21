@@ -1,4 +1,5 @@
 import { Result, ok, failed, result } from '../result';
+import { StompitError } from '../error';
 import { Transport } from '../transport';
 import { Frame, STOMP_VERSION_10 } from '../frame/protocol';
 import { FrameHeaders } from '../frame/header';
@@ -7,12 +8,12 @@ import { RECEIPT_NOT_REQUESTED } from './receipt';
 import { connect } from './connect';
 
 class Server implements Transport {
-  public writeResult: Error | undefined;
+  public writeResult: StompitError | undefined;
   public readResult: Result<Frame>;
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
   public calls: [keyof Server, any[]][];
 
-  public constructor(writeResult: Error | undefined, readResult: Result<Frame>) {
+  public constructor(writeResult: StompitError | undefined, readResult: Result<Frame>) {
     this.writeResult = writeResult;
     this.readResult = readResult;
     this.calls = [];
@@ -46,7 +47,7 @@ class Server implements Transport {
     return Promise.resolve(this.readResult);
   }
 
-  public writeFrame(): Promise<Error | undefined> {
+  public writeFrame(): Promise<StompitError | undefined> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return Promise.resolve(this.writeResult);

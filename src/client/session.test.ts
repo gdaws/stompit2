@@ -1,4 +1,5 @@
 import { Result, result, ok, fail, failed, error, RESULT_CANCELLED, RESULT_OK } from '../result';
+import { StompitError } from '../error';
 import { createQueue, Queue } from '../queue';
 import { Frame, STOMP_VERSION_12 } from '../frame/protocol';
 import { FrameHeaders, HeaderLineOptional } from '../frame/header';
@@ -30,7 +31,7 @@ class MockServer implements Transport {
 
   public resultQueue: Queue<Result<Frame>>;
 
-  private writeFrameResult: Promise<Error | undefined>;
+  private writeFrameResult: Promise<StompitError | undefined>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public calls: [keyof MockServer, any[]][];
@@ -65,7 +66,7 @@ class MockServer implements Transport {
     const iterResult = await iterator.next();
 
     if (iterResult.done) {
-      return fail(new Error('input stream terminated'));
+      return fail(new StompitError('TransportFailure', 'input stream terminated'));
     }
 
     return iterResult.value;
@@ -75,11 +76,11 @@ class MockServer implements Transport {
     this.resultQueue[0].push(result);
   }
 
-  public setWriteFrameResult(result: Promise<Error | undefined>) {
+  public setWriteFrameResult(result: Promise<StompitError | undefined>) {
     this.writeFrameResult = result;
   }
 
-  public writeFrame(): Promise<Error | undefined> {
+  public writeFrame(): Promise<StompitError | undefined> {
     // eslint-disable-next-line prefer-rest-params
     this.calls.push(['writeFrame', [...arguments]]);
     return this.writeFrameResult;
@@ -153,10 +154,12 @@ test('missing destination header', async () => {
     body: writeString('hello')
   };
 
-  const sendError = await session.send(originalFrame);
-
-  expect(sendError).toBeDefined();
-  expect(sendError?.message).toBe('missing destination header');
+  try {
+    await session.send(originalFrame);
+  }
+  catch (error) {
+    expect(error instanceof Error ? error.message : '').toBe('missing destination header');
+  }
 });
 
 test('receipt', async () => {
@@ -285,7 +288,7 @@ test('begin error', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('SessionClosed', 'test')));
 
   const result = await session.begin(RECEIPT_DEFAULT_TIMEOUT);
 
@@ -314,7 +317,7 @@ test('commit error', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('SessionClosed', 'test')));
 
   const transaction = 'fake-transaction';
 
@@ -346,7 +349,7 @@ test('abort error', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('SessionClosed', 'test')));
 
   const transaction = 'fake-transaction';
 
@@ -380,7 +383,7 @@ test('subscribe error', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('SessionClosed', 'test')));
 
   const result = await session.subscribe('/queue/a');
 
@@ -409,7 +412,7 @@ test('unsubscribe error', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('test')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('SessionClosed', 'test')));
 
   const subscription = { id: 'fake-subscription', headers: new FrameHeaders([]) };
 
@@ -553,20 +556,17 @@ test('readFrame fail', async () => {
   const send = session.send(message([['destination', '/queue/a']], 'hello'), RECEIPT_SHORT_TIMEOUT);
   const receive = session.receive(dummySubscription);
 
-  server.push(fail(new Error('fake transport error')));
+  server.push(fail(new StompitError('SessionClosed', 'fake transport error')));
 
   const [sendError, receiveResult] = await Promise.all([send, receive]);
 
-  expect(sendError && sendError.message).toBe('session disconnected');
+  expect(sendError && sendError.code).toBe('SessionClosed');
+  expect(sendError && sendError.message).toBe('session closed');
 
-  expect(failed(receiveResult) && error(receiveResult).message).toBe('session disconnected');
+  expect(failed(receiveResult) && error(receiveResult).code).toBe('SessionClosed');
+  expect(failed(receiveResult) && error(receiveResult).message).toBe('session closed');
 
   expect(session.isDisconnected()).toBe(true);
-
-  const disconnectError = session.getDisconnectError();
-
-  expect(disconnectError).toBeDefined();
-  expect(disconnectError?.message).toBe('fake transport error');
 
   const lastCall = server.calls[server.calls.length - 1];
 
@@ -577,12 +577,12 @@ test('writeFrame fail', async () => {
   const server = new MockServer([], RECEIPT_NOT_REQUESTED);
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  server.setWriteFrameResult(Promise.resolve(new Error('fake transport error')));
+  server.setWriteFrameResult(Promise.resolve(new StompitError('TransportFailure', 'fake transport error')));
 
   const sendError = await session.send(message([['destination', '/queue/a']], 'hello'));
 
   expect(sendError).toBeDefined();
-  expect(sendError?.message).toBe('session disconnected');
+  expect(sendError?.message).toBe('fake transport error');
 
   expect(session.isDisconnected()).toBe(true);
 
@@ -657,21 +657,16 @@ test('disconnect cancels receive', (done) => {
   });
 });
 
-test('unreceipt disconnect cancels receipts', async () => {
+test('unreceipt disconnect should throw an exception', async (done) => {
   const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
-
   const session = new ClientSession(server, STOMP_VERSION_12);
 
-  const sendResult = session.send(message([['destination', '/queue/a']], 'hello'));
-
-  const disconnectError = await session.disconnect(RECEIPT_NOT_REQUESTED);
-
-  const sendError = await sendResult;
-
-  expect(disconnectError).toBeUndefined();
-
-  expect(sendError).toBeDefined();
-  expect(sendError?.message).toBe('session disconnected');
+  try {
+    await session.disconnect(RECEIPT_NOT_REQUESTED);
+  }
+  catch (error) {
+    done();
+  }
 });
 
 test('async sends with sync disconnect', async () => {
@@ -739,15 +734,6 @@ test('unhandled message', async () => {
   await receive;
 
   expect(session.isDisconnected()).toBe(true);
-
-  const error = session.getDisconnectError();
-
-  if (!error) {
-    expect(error).toBeDefined();
-    return;
-  }
-
-  expect(error.message).toBe('unhandled message');
 });
 
 test('receive unhandled message', async () => {
@@ -783,12 +769,4 @@ test('unhandled message after unsubscribe', async () => {
   await session.receive({ id: '2', headers: new FrameHeaders([]) });
 
   expect(session.isDisconnected()).toBe(true);
-
-  const disconnectError = session.getDisconnectError();
-
-  if (!disconnectError) {
-    expect(disconnectError).toBeDefined();
-  }
-
-  expect(disconnectError?.message).toBe('unhandled message');
 });

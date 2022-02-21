@@ -14,6 +14,7 @@ import {
 import { FrameBody, FrameBodyChunk } from './protocol';
 import { Chunk, alloc, concatPair, decodeString } from '../stream/chunk';
 import { ok, failed, result, error } from '../result';
+import { StompitError } from '../error';
 import { createSignal } from '../concurrency';
 
 async function read(body: FrameBody): Promise<FrameBodyChunk> {
@@ -42,7 +43,7 @@ describe('readEmptyBody', () => {
   });
 
   test('error', async () => {
-    const result = await readEmptyBody(writeError(new Error('fail test')));
+    const result = await readEmptyBody(writeError(new StompitError('ProtocolViolation', 'fail test')));
     expect(failed(result) && error(result).message).toBe('fail test');
   });
 
@@ -58,7 +59,7 @@ describe('readEmptyBody', () => {
 });
 
 test('writeError', async () => {
-  const writeIterator = writeError(new Error('test'));
+  const writeIterator = writeError(new StompitError('ProtocolViolation', 'test'));
 
   const writeResult = await writeIterator.next();
 
@@ -110,7 +111,7 @@ test('readString', async () => {
 });
 
 test('readString error', async () => {
-  const result = await readString(writeError(new Error('fail')));
+  const result = await readString(writeError(new StompitError('ProtocolViolation', 'fail')));
 
   expect(failed(result) && error(result).message).toBe('fail');
 });
@@ -131,7 +132,7 @@ test('readJson', async () => {
 });
 
 test('readJson read error', async () => {
-  const result = await readJson(writeError(new Error('fail')));
+  const result = await readJson(writeError(new StompitError('ProtocolViolation', 'fail')));
   expect(failed(result) && error(result).message).toBe('fail');
 });
 
@@ -182,7 +183,7 @@ test('createEmitEndDecorator', async () => {
 test('createEmitEndDecorator read error', async () => {
   const [signal, emit] = createSignal<Error | void>();
 
-  const body = createEmitEndDecorator(writeError(new Error('fail')), emit);
+  const body = createEmitEndDecorator(writeError(new StompitError('ProtocolViolation', 'fail')), emit);
 
   for await (const _chunk of body) { }
 

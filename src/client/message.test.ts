@@ -1,4 +1,5 @@
 import { result, ok, fail } from '../result';
+import { StompitError } from '../error';
 import { FrameHeaders } from '../frame/header';
 import { readString, writeString } from '../frame/body';
 import { Producer, Consumer, createQueue } from '../queue';
@@ -40,7 +41,7 @@ class DiscardMessagesMockSession implements Receivable, AckSendable {
     const result = await iterator.next();
 
     if (result.done) {
-      return fail(new Error('subscription terminated'));
+      return fail(new StompitError('ServerError', 'subscription terminated'));
     }
 
     return result.value;
@@ -82,7 +83,7 @@ test('discardMessages', async () => {
   session.inputProducer.push(ok(message('2')));
   session.inputProducer.push(ok(message('3')));
 
-  session.inputProducer.push(fail(new Error('session timeout')));
+  session.inputProducer.push(fail(new StompitError('SessionClosed', 'session timeout')));
 
   await finishDiscardingMessages;
 

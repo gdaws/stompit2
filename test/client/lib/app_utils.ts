@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { VoidResult, failed, error } from '../../../src/result';
+import { StompitError, isStompitError } from '../../../src/error';
 import { netConnect } from '../../../src/transport/netSocketStream';
 import { limitDefaults } from '../../../src/transport';
 import { connect } from '../../../src/client/connect';
@@ -38,9 +39,9 @@ export function logger(name: string): LogFunction {
 export async function session(name: string, handler: SessionHandler): Promise<VoidResult> {
   const log = logger(name);
 
-  const handleError = (message: string): Error => {
+  const handleError = (message: string): StompitError => {
     log(message);
-    return new Error(message);
+    return new StompitError('SessionClosed', message);
   };
 
   const config = getConnectionConfig();
@@ -85,12 +86,16 @@ export async function session(name: string, handler: SessionHandler): Promise<Vo
     await handler(session, log);
   }
   catch (error) {
-    const disconnectError = session.getDisconnectError();
-
-    log(`Handler aborted: ${disconnectError ? disconnectError.message : (error as Error).message}`);
-
     session.shutdown();
-    return error as Error;
+
+    if (isStompitError(error)) {
+      log(`Handler aborted: ${error.message}`);
+      return error;
+    }
+    else {
+      log(`Handler aborted: ${error instanceof Error ? error.message : 'unknown message'}`);
+      return new StompitError('OperationCancelled', 'unknown error');
+    }
   }
 
   if (!session.isDisconnected()) {

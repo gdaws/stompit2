@@ -1,4 +1,5 @@
 import { Result, result, ok } from './result';
+import { StompitError } from './error';
 import { Frame, ProtocolVersion, STOMP_VERSION_10, acceptedVersions } from './frame/protocol';
 import { FrameHeaders } from './frame/header';
 import { writeEmptyBody } from './frame/body';
@@ -29,7 +30,7 @@ class MockTransport implements Transport {
     }));
   }
 
-  writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<Error | undefined> {
+  writeFrame(frame: Frame, protocolVersion: ProtocolVersion): Promise<StompitError | undefined> {
     this.writtenFrame = [frame, protocolVersion];
     return Promise.resolve(undefined);
   }

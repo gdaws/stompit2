@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 
 import { Result, ok, fail } from '../result';
+import { StompitError } from '../error';
 import { Chunk, encodeUtf8String } from '../stream/chunk';
 import { createQueue, Producer } from '../queue';
 
@@ -109,13 +110,13 @@ export class WebSocketStream implements TransportStream {
     }
   }
 
-  public async write(chunk: Chunk): Promise<Error | undefined> {
+  public async write(chunk: Chunk): Promise<StompitError | undefined> {
     if (this.socket.readyState === WebSocket.CLOSED) {
-      return new Error('socket is closed');
+      return new StompitError('TransportFailure', 'socket is closed');
     }
 
     if (this.socket.readyState === WebSocket.CLOSING) {
-      return new Error('socket is closing');
+      return new StompitError('TransportFailure', 'socket is closing');
     }
 
     this.socketOutputQueue.push(chunk);
@@ -124,29 +125,29 @@ export class WebSocketStream implements TransportStream {
       await this.socketOutputQueue.drained();
     }
     catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof StompitError) {
         return error;
       }
       else {
-        return new Error('write error');
+        return new StompitError('TransportFailure', 'write error');
       }
     }
 
     this.bytesWritten += chunk.byteLength;
   }
 
-  public async writeEnd(): Promise<Error | undefined> {
+  public async writeEnd(): Promise<StompitError | undefined> {
     this.socketOutputQueue.terminate();
 
     try {
       await this.socketOutputQueue.drained();
     }
     catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof StompitError) {
         return error;
       }
       else {
-        return new Error('write error');
+        return new StompitError('TransportFailure', 'write error');
       }
     }
   }
@@ -166,11 +167,11 @@ export function wsConnect(url: string, limits?: Partial<TransportLimits>): Promi
       resolve(ok(new StandardTransport(new WebSocketStream(socket), { ...limitDefaults, ...(limits || {}) })));
     }
     catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof StompitError) {
         resolve(fail(error));
       }
       else {
-        resolve(fail(new Error('connect error')));
+        resolve(fail(new StompitError('TransportFailure', 'connect error')));
       }
     }
   });

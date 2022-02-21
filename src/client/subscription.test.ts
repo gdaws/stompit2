@@ -1,4 +1,5 @@
 import { ok, fail, failed, error, result } from '../result';
+import { StompitError } from '../error';
 import { FrameHeaders } from '../frame/header';
 import { writeString, readString } from '../frame/body';
 import { Receivable, MessageResult, Subscription } from './session';
@@ -91,7 +92,7 @@ describe('messageQueue', () => {
   test('receive fail', async () => {
     const session = new MockSession();
 
-    session.push(fail(new Error('session disconnected')));
+    session.push(fail(new StompitError('SessionClosed', 'session disconnected')));
 
     const subscription = createSubscription();
 

@@ -191,7 +191,7 @@ export class StandardTransport implements Transport {
    */
   public async readFrame(protocolVersion: ProtocolVersion) {
     if (this.sessionClosed) {
-      return errorCode('TransportFailure', 'session is closed');
+      return errorCode('TransportFailure', 'session closed');
     }
 
     const params = {
@@ -228,7 +228,7 @@ export class StandardTransport implements Transport {
    */
   public async writeFrame(frame: Frame, protocolVersion: ProtocolVersion) {
     if (this.sessionClosed) {
-      return new StompitError('TransportFailure', 'session is closed');
+      return new StompitError('TransportFailure', 'session closed');
     }
 
     const params = {

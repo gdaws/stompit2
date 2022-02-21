@@ -12,6 +12,7 @@ import {
   cancel,
   fail,
   failed,
+  error,
   Result,
   VoidResult,
   CancelResult
@@ -112,7 +113,7 @@ export class ClientSession implements Receivable, AckSendable {
 
   private disconnected: boolean;
 
-  private shutdownCalled: boolean;
+  private terminateCalled: boolean;
 
   private protocolVersion: ProtocolVersion;
 
@@ -150,7 +151,7 @@ export class ClientSession implements Receivable, AckSendable {
 
     this.disconnected = false;
 
-    this.shutdownCalled = false;
+    this.terminateCalled = false;
 
     this.protocolVersion = protocolVersion;
 
@@ -432,19 +433,29 @@ export class ClientSession implements Receivable, AckSendable {
    * The recommended method for closing a session is {@link disconnect}.
    */
   public shutdown() {
-    if (this.shutdownCalled) {
+    const operationCancelled = new StompitError('OperationCancelled', 'shutdown called');
+
+    this.closeSendRequests(operationCancelled);
+    this.closeReceiveRequests(operationCancelled);
+
+    this.terminate();
+  }
+
+  private terminate() {
+    if (this.terminateCalled) {
       return;
     }
 
-    this.shutdownCalled = true;
+    this.terminateCalled = true;
 
     this.disconnected = true;
 
-    const sessionClosedError = new StompitError('SessionClosed', 'session closed: operation cancelled');
+    if (this.sendQueue.length > 0 || this.receiveFrameRequests > 0) {
+      const sessionClosed = new StompitError('SessionClosed', 'session closed');
 
-    this.shutdownSendRequests(sessionClosedError);
-
-    this.shutdownReceiveRequests(sessionClosedError);
+      this.closeSendRequests(sessionClosed);
+      this.closeReceiveRequests(sessionClosed);
+    }
 
     this.transport.close();
   }
@@ -469,7 +480,11 @@ export class ClientSession implements Receivable, AckSendable {
     const missingHeader = frame.headers.required(...(requiredHeaders[frame.command] || []));
 
     if (missingHeader) {
-      return Promise.resolve(new StompitError('ProtocolViolation', missingHeader.message));
+      return Promise.reject(missingHeader);
+    }
+
+    if (frame.command === 'DISCONNECT' && receiptTimeout === RECEIPT_NOT_REQUESTED) {
+      return Promise.reject(new Error('sending a disconnect request must include a receipt timeout'));
     }
 
     return new Promise((resolve) => {
@@ -548,7 +563,7 @@ export class ClientSession implements Receivable, AckSendable {
         callback(error);
 
         this.notifyErrorListener(error);
-        this.shutdown();
+        this.terminate();
 
         this.sendLoopRunning = false;
 
@@ -594,7 +609,8 @@ export class ClientSession implements Receivable, AckSendable {
     const readFrameResult = await this.transport.readFrame(this.protocolVersion);
 
     if (failed(readFrameResult)) {
-      return this.shutdown();
+      this.notifyErrorListener(error(readFrameResult));
+      return this.terminate();
     }
 
     const frame = readFrameResult.value;
@@ -609,7 +625,7 @@ export class ClientSession implements Receivable, AckSendable {
         if (!subscriptionId) {
           const error = new StompitError('ProtocolViolation', 'server sent MESSAGE frame without including a subscription header');
           this.notifyErrorListener(error);
-          return this.shutdown();
+          return this.terminate();
         }
 
         const callback = this.messageRequests[subscriptionId];
@@ -632,7 +648,7 @@ export class ClientSession implements Receivable, AckSendable {
           else {
             const error = new StompitError('ProtocolViolation', 'unhandled message');
             this.notifyErrorListener(error);
-            return this.shutdown();
+            return this.terminate();
           }
         }
 
@@ -647,7 +663,8 @@ export class ClientSession implements Receivable, AckSendable {
         const readBodyResult = await readEmptyBody(frame.body);
 
         if (failed(readBodyResult)) {
-          return this.shutdown();
+          this.notifyErrorListener(error(readBodyResult));
+          return this.terminate();
         }
 
         const receiptId = frame.headers.get('receipt-id');
@@ -655,7 +672,7 @@ export class ClientSession implements Receivable, AckSendable {
         if (!receiptId) {
           const error = new StompitError('ProtocolViolation', 'server sent RECEIPT frame without a receipt-id header');
           this.notifyErrorListener(error);
-          return this.shutdown();
+          return this.terminate();
         }
 
         this.receiveFrameRequests -= 1;
@@ -668,7 +685,7 @@ export class ClientSession implements Receivable, AckSendable {
       case 'ERROR':
         const serverError = await readServerError(frame);
         this.notifyErrorListener(serverError);
-        return this.shutdown();
+        return this.terminate();
     }
   }
 
@@ -704,7 +721,7 @@ export class ClientSession implements Receivable, AckSendable {
     }
   }
 
-  private shutdownSendRequests(error: StompitError) {
+  private closeSendRequests(error: StompitError) {
     this.sendQueue.forEach(([_frame, _timeout, callback]) => {
       callback(error);
     });
@@ -712,7 +729,7 @@ export class ClientSession implements Receivable, AckSendable {
     this.sendQueue = [];
   }
 
-  private shutdownReceiveRequests(error: StompitError) {
+  private closeReceiveRequests(error: StompitError) {
     this.subscriptions.clear();
 
     const receiptRequests = this.receiptRequests;
@@ -728,12 +745,29 @@ export class ClientSession implements Receivable, AckSendable {
       request.callback(error);
     });
 
-    Object.values(messageRequests).forEach(callback => callback(fail(error)));
+    Object.values(messageRequests).forEach(callback => {
+      if (error.code === 'OperationCancelled') {
+        callback(cancel());
+      }
+      else callback(fail(error))
+    });
   }
 
   private observeSendCompletion(frame: Frame) {
     switch (frame.command) {
       case 'DISCONNECT':
+
+        Object.values(this.receiptRequests).forEach(request => {
+          clearTimeout(request.timeout);
+          request.callback(undefined);
+        });
+
+        this.receiptRequests = {};
+
+        const operationCancelled = new StompitError('OperationCancelled', 'session closed');
+
+        this.closeSendRequests(operationCancelled);
+        this.closeReceiveRequests(operationCancelled);
 
         this.shutdown();
 
