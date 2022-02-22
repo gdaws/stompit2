@@ -128,7 +128,7 @@ export class ClientSession implements Receivable, AckSendable {
   private messageRequests: { [subscriptionId: string]: MessageCallback };
   private unhandledMessage: Frame | undefined;
 
-  private receiptRequests: { [receiptId: string]: ReceiptRequest };
+  private receiptRequests: Map<string, ReceiptRequest>;
 
   private nextResourceId: number;
   private nextReceiptSeq: number;
@@ -165,7 +165,7 @@ export class ClientSession implements Receivable, AckSendable {
     this.receiveFrameRequests = 0;
 
     this.messageRequests = {};
-    this.receiptRequests = {};
+    this.receiptRequests = new Map<string, ReceiptRequest>();
 
     this.nextResourceId = 1;
     this.nextReceiptSeq = 1;
@@ -520,25 +520,27 @@ export class ClientSession implements Receivable, AckSendable {
         ['receipt', receiptId]
       ]));
 
-      this.receiptRequests[receiptId] = {
+      const receiptRequest: ReceiptRequest = {
         id: receiptId,
         seq: this.nextReceiptSeq++,
         frame,
         callback,
         timeout: setTimeout(() => {
-          const request = this.receiptRequests[receiptId];
+          const request = this.receiptRequests.get(receiptId);
 
           if (!request) {
             return;
           }
 
-          delete this.receiptRequests[receiptId];
+          this.receiptRequests.delete(receiptId);
 
           const error = new StompitError('OperationTimeout', ERROR_RECEIPT_TIMEOUT);
 
           request.callback(error);
         }, receiptTimeout)
       };
+
+      this.receiptRequests.set(receiptId, receiptRequest);
 
       this.addReceiveRequest();
     }
@@ -552,10 +554,10 @@ export class ClientSession implements Receivable, AckSendable {
         if (RECEIPT_NOT_REQUESTED !== receiptTimeout) {
           const receiptId = frame.headers.get('receipt');
           if (receiptId) {
-            const receiptRequest = this.receiptRequests[receiptId];
+            const receiptRequest = this.receiptRequests.get(receiptId);
             if (receiptRequest) {
               clearTimeout(receiptRequest.timeout);
-              delete this.receiptRequests[receiptId];
+              this.receiptRequests.delete(receiptId);
             }
           }
         }
@@ -685,12 +687,12 @@ export class ClientSession implements Receivable, AckSendable {
       case 'ERROR':
         const serverError = await readServerError(frame);
         this.notifyErrorListener(serverError);
-        return this.terminate();
+        this.terminate();
     }
   }
 
   private processReceipt(id: string) {
-    const latestRequest = this.receiptRequests[id];
+    const latestRequest = this.receiptRequests.get(id);
 
     if (!latestRequest) {
       return false;
@@ -698,14 +700,13 @@ export class ClientSession implements Receivable, AckSendable {
 
     const latestSeq = latestRequest.seq;
 
-    Object
-      .values(this.receiptRequests)
+    Array.from(this.receiptRequests.values())
       .filter(request => request.seq <= latestSeq)
       .sort((a, b) => a.seq - b.seq)
       .forEach(request => {
         clearTimeout(request.timeout);
 
-        delete this.receiptRequests[request.id];
+        this.receiptRequests.delete(request.id);
 
         this.observeSendCompletion(request.frame);
 
@@ -732,15 +733,15 @@ export class ClientSession implements Receivable, AckSendable {
   private closeReceiveRequests(error: StompitError) {
     this.subscriptions.clear();
 
-    const receiptRequests = this.receiptRequests;
+    const receiptRequests = Array.from(this.receiptRequests.values());
     const messageRequests = this.messageRequests;
 
     this.receiveFrameRequests = 0;
 
     this.messageRequests = {};
-    this.receiptRequests = {};
+    this.receiptRequests.clear();
 
-    Object.values(receiptRequests).forEach(request => {
+    receiptRequests.forEach(request => {
       clearTimeout(request.timeout);
       request.callback(error);
     });
@@ -757,12 +758,14 @@ export class ClientSession implements Receivable, AckSendable {
     switch (frame.command) {
       case 'DISCONNECT':
 
-        Object.values(this.receiptRequests).forEach(request => {
+        const receiptRequests = Array.from(this.receiptRequests.values());
+
+        this.receiptRequests.clear();
+
+        receiptRequests.forEach(request => {
           clearTimeout(request.timeout);
           request.callback(undefined);
         });
-
-        this.receiptRequests = {};
 
         const operationCancelled = new StompitError('OperationCancelled', 'session closed');
 
