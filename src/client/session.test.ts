@@ -1,5 +1,5 @@
 import { Result, result, ok, fail, failed, error, RESULT_CANCELLED, RESULT_OK } from '../result';
-import { StompitError } from '../error';
+import { StompitError, isServerError } from '../error';
 import { createQueue, Queue } from '../queue';
 import { Frame, STOMP_VERSION_12 } from '../frame/protocol';
 import { FrameHeaders, HeaderLineOptional } from '../frame/header';
@@ -769,4 +769,24 @@ test('unhandled message after unsubscribe', async () => {
   await session.receive({ id: '2', headers: new FrameHeaders([]) });
 
   expect(session.isDisconnected()).toBe(true);
+});
+
+test('send operation fails after server error', async () => {
+  const server = new MockServer([], RECEIPT_SHORT_TIMEOUT);
+  const session = new ClientSession(server, STOMP_VERSION_12);
+
+  const sendOperation = session.send({ command: 'SEND', headers: new FrameHeaders([['destination', '/wherever']]), body: writeString('hello') });
+
+  server.push(ok({
+    command: 'ERROR',
+    headers: new FrameHeaders([['receipt-id', '1']]),
+    body: writeString('unique error message')
+  }));
+
+  const sendResult = await sendOperation;
+
+  expect(sendResult).toBeDefined();
+  expect(sendResult instanceof StompitError).toBe(true);
+  expect(sendResult && sendResult.code).toBe('ServerError');
+  expect(sendResult && isServerError(sendResult) && sendResult.frame.body).toBe('unique error message');
 });

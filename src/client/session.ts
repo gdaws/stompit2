@@ -679,19 +679,31 @@ export class ClientSession implements Receivable, AckSendable {
 
         this.receiveFrameRequests -= 1;
 
-        this.processReceipt(receiptId);
+        this.processReceipt(receiptId, undefined);
 
         break;
       }
 
       case 'ERROR':
         const serverError = await readServerError(frame);
+
         this.notifyErrorListener(serverError);
+
+        if (this.receiptRequests.size === 1) {
+          this.processReceipt(Array.from(this.receiptRequests.keys())[0], serverError);
+        }
+        else {
+          const receiptId = frame.headers.get('receipt-id');
+          if (receiptId) {
+            this.processReceipt(receiptId, serverError);
+          }
+        }
+
         this.terminate();
     }
   }
 
-  private processReceipt(id: string) {
+  private processReceipt(id: string, result: undefined | StompitError) {
     const latestRequest = this.receiptRequests.get(id);
 
     if (!latestRequest) {
@@ -710,7 +722,7 @@ export class ClientSession implements Receivable, AckSendable {
 
         this.observeSendCompletion(request.frame);
 
-        request.callback(undefined);
+        request.callback(result);
       })
 
     return true;
